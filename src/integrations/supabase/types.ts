@@ -137,6 +137,90 @@ export type Database = {
           },
         ]
       }
+      bot_broadcasts: {
+        Row: {
+          broadcast_type: string
+          button_text: string | null
+          button_url: string | null
+          created_at: string
+          created_by: string | null
+          failed_count: number | null
+          id: string
+          image_url: string | null
+          message: string
+          product_ids: string[] | null
+          sent_at: string | null
+          sent_count: number | null
+          status: string
+          title: string
+        }
+        Insert: {
+          broadcast_type?: string
+          button_text?: string | null
+          button_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number | null
+          id?: string
+          image_url?: string | null
+          message: string
+          product_ids?: string[] | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          title: string
+        }
+        Update: {
+          broadcast_type?: string
+          button_text?: string | null
+          button_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          failed_count?: number | null
+          id?: string
+          image_url?: string | null
+          message?: string
+          product_ids?: string[] | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      bot_subscribers: {
+        Row: {
+          chat_id: number
+          first_name: string | null
+          id: string
+          is_active: boolean
+          last_message_at: string | null
+          subscribed_at: string
+          telegram_id: number
+          username: string | null
+        }
+        Insert: {
+          chat_id: number
+          first_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_message_at?: string | null
+          subscribed_at?: string
+          telegram_id: number
+          username?: string | null
+        }
+        Update: {
+          chat_id?: number
+          first_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_message_at?: string | null
+          subscribed_at?: string
+          telegram_id?: number
+          username?: string | null
+        }
+        Relationships: []
+      }
       click_logs: {
         Row: {
           clicks_count: number
@@ -283,6 +367,81 @@ export type Database = {
           updated_at?: string
           username?: string | null
           xp?: number
+        }
+        Relationships: []
+      }
+      promotions: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_percent: number | null
+          end_date: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          product_ids: string[] | null
+          promo_code: string | null
+          start_date: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          product_ids?: string[] | null
+          promo_code?: string | null
+          start_date?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_percent?: number | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          product_ids?: string[] | null
+          promo_code?: string | null
+          start_date?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      quizzes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          questions: Json
+          reward_type: string | null
+          reward_value: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          questions?: Json
+          reward_type?: string | null
+          reward_value?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          questions?: Json
+          reward_type?: string | null
+          reward_value?: string | null
+          title?: string
         }
         Relationships: []
       }
