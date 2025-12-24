@@ -87,6 +87,24 @@ export const useProductAdmin = (adminSecret: string) => {
     }
   };
 
+  const bulkCreateProducts = async (products: Omit<PetProduct, 'id'>[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('pet_products')
+        .insert(products)
+        .select();
+
+      if (error) throw error;
+      
+      await loadProducts();
+      return data;
+    } catch (err) {
+      console.error('Error bulk creating products:', err);
+      toast.error('Ошибка импорта товаров');
+      return null;
+    }
+  };
+
   const deleteProduct = async (productId: string) => {
     try {
       const { error } = await supabase
@@ -119,6 +137,7 @@ export const useProductAdmin = (adminSecret: string) => {
     uploadImage,
     updateProduct,
     createProduct,
+    bulkCreateProducts,
     deleteProduct,
   };
 };

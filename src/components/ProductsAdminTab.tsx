@@ -4,11 +4,12 @@ import { useProductAdmin } from '@/hooks/useProductAdmin';
 import { PetProduct, categoryLabels, CategoryType } from '@/hooks/usePetProducts';
 import { 
   Plus, Upload, Trash2, Save, X, Image as ImageIcon, 
-  Loader2, Package, Edit2 
+  Loader2, Package, Edit2, FileSpreadsheet 
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import ProductImportDialog from '@/components/admin/ProductImportDialog';
 
 interface ProductsAdminTabProps {
   adminSecret: string;
@@ -35,11 +36,13 @@ const ProductsAdminTab = ({ adminSecret }: ProductsAdminTabProps) => {
     uploadImage,
     updateProduct,
     createProduct,
+    bulkCreateProducts,
     deleteProduct,
   } = useProductAdmin(adminSecret);
 
   const [editingProduct, setEditingProduct] = useState<PetProduct | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [newProduct, setNewProduct] = useState(emptyProduct);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -117,6 +120,35 @@ const ProductsAdminTab = ({ adminSecret }: ProductsAdminTabProps) => {
     await deleteProduct(productId);
   };
 
+  const handleImportProducts = async (importedProducts: Array<{
+    name_ru: string;
+    name?: string;
+    description_ru?: string;
+    description?: string;
+    category?: string;
+    price?: number;
+    currency?: string;
+    icon?: string;
+    in_stock?: boolean;
+    image_url?: string;
+  }>) => {
+    const productsToCreate = importedProducts.map(p => ({
+      name: p.name || p.name_ru,
+      name_ru: p.name_ru,
+      description: p.description || null,
+      description_ru: p.description_ru || null,
+      category: p.category || 'other',
+      price: p.price || 0,
+      currency: p.currency || 'RUB',
+      icon: p.icon || '🐾',
+      in_stock: p.in_stock ?? true,
+      image_url: p.image_url || null,
+      created_at: new Date().toISOString(),
+    }));
+    
+    await bulkCreateProducts(productsToCreate);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -131,15 +163,32 @@ const ProductsAdminTab = ({ adminSecret }: ProductsAdminTabProps) => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      {/* Кнопка добавления */}
-      <Button
-        className="w-full btn-gradient-primary"
-        onClick={() => setIsCreating(true)}
-        disabled={isCreating}
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Добавить товар
-      </Button>
+      {/* Кнопки действий */}
+      <div className="flex gap-2">
+        <Button
+          className="flex-1 btn-gradient-primary"
+          onClick={() => setIsCreating(true)}
+          disabled={isCreating}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Добавить
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => setIsImporting(true)}
+        >
+          <FileSpreadsheet className="w-4 h-4 mr-2" />
+          Импорт
+        </Button>
+      </div>
+
+      {/* Диалог импорта */}
+      <ProductImportDialog
+        isOpen={isImporting}
+        onClose={() => setIsImporting(false)}
+        onImport={handleImportProducts}
+      />
 
       {/* Форма создания */}
       {isCreating && (
