@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
 import { useTelegramTheme } from '@/hooks/useTelegramTheme';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import FloatingParticles from '@/components/game/FloatingParticles';
-
 // Компонент питомца с шапкой Санты
 const PetAvatar = ({ level, avatarVariant }: { level: number; avatarVariant: number }) => {
   const pets = ['🐕', '🐈', '🐹', '🐰', '🦜'];
@@ -201,10 +201,15 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
 // Главная страница игры
 const GamePage = () => {
   const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
+  const { playTap, playCrystal, playChest } = useSoundEffects();
   const [floatingCrystals, setFloatingCrystals] = useState<{ id: number; x: number; y: number }[]>([]);
   const [crystalId, setCrystalId] = useState(0);
 
   const onTap = async () => {
+    // Звуковые эффекты
+    playTap();
+    setTimeout(() => playCrystal(), 50);
+    
     const id = crystalId;
     setCrystalId(prev => prev + 1);
     
@@ -217,6 +222,13 @@ const GamePage = () => {
     }, 700);
     
     await handleClick();
+  };
+
+  const handleChestClaim = () => {
+    if (canClaimChest()) {
+      playChest();
+      claimChest();
+    }
   };
 
   if (!profile) {
@@ -259,7 +271,7 @@ const GamePage = () => {
       <button
         type="button"
         className={`w-full btn-gradient-accent py-4 rounded-2xl flex items-center justify-center gap-3 touch-manipulation active:scale-[0.98] transition-transform ${!canClaimChest() ? 'opacity-50' : ''}`}
-        onClick={() => canClaimChest() && claimChest()}
+        onClick={handleChestClaim}
         disabled={!canClaimChest()}
       >
         <Gift className="w-6 h-6" />
