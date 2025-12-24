@@ -409,6 +409,37 @@ serve(async (req) => {
       });
     }
 
+    // Detect ORDER messages from the shop (contains specific order format)
+    const isOrderMessage = text.includes('Хочу заказать') && text.includes('📦') && text.includes('💰');
+    
+    if (isOrderMessage) {
+      console.log(`Order received from ${userName}: ${text}`);
+      
+      // Extract product name from order
+      const productMatch = text.match(/📦\s*(.+?)(?:\n|$)/);
+      const productName = productMatch ? productMatch[1].trim() : 'товар';
+      
+      const orderConfirmation = `✅ <b>Спасибо за заказ, ${userName}!</b>
+
+Мы получили вашу заявку на:
+📦 <b>${productName}</b>
+
+⏰ <b>Наш менеджер свяжется с вами в течение 15 минут</b> для уточнения деталей и подтверждения заказа.
+
+Если у вас возникнут вопросы — просто напишите сюда! 💬`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [{ text: '🛒 Вернуться в магазин', web_app: { url: 'https://jtyqkppcieujjycqlkco.lovableproject.com' } }]
+        ]
+      };
+
+      await sendTelegramMessage(chatId, orderConfirmation, keyboard);
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // For any other message, use AI to respond
     console.log(`Processing AI request for: "${text}" from ${userName}`);
     
