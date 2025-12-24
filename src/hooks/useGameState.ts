@@ -276,6 +276,37 @@ export function useGameState() {
   const claimChest = useCallback(async (): Promise<ChestResult | null> => {
     hapticImpact('heavy');
 
+    // В DEV режиме без Telegram - локальный мок сундука
+    if (import.meta.env.DEV && !isTelegram) {
+      const crystalsEarned = 50 + Math.floor(Math.random() * 100);
+      const stonesEarned = Math.random() > 0.7 ? Math.floor(Math.random() * 5) + 1 : 0;
+      const newStreak = (profile?.streak_days || 0) + 1;
+      
+      setProfile(prev => prev ? {
+        ...prev,
+        crystals: prev.crystals + crystalsEarned,
+        stones: prev.stones + stonesEarned,
+        streak_days: newStreak,
+        last_chest_claim: new Date().toISOString()
+      } : null);
+
+      hapticNotification('success');
+      
+      let message = `💎 +${crystalsEarned} кристаллов!`;
+      if (stonesEarned > 0) {
+        message += ` 🪨 +${stonesEarned} камней!`;
+      }
+      message += ` 🔥 Стрик ${newStreak} дней!`;
+      
+      toast.success(message);
+      return {
+        crystalsEarned,
+        stonesEarned,
+        streakDays: newStreak,
+        streakMilestone: newStreak % 7 === 0 ? newStreak : null
+      };
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('game-chest', {
         method: 'POST'
@@ -291,7 +322,8 @@ export function useGameState() {
         ...prev,
         crystals: data.newCrystals,
         stones: data.newStones,
-        streak_days: data.streakDays
+        streak_days: data.streakDays,
+        last_chest_claim: new Date().toISOString()
       } : null);
 
       hapticNotification('success');
@@ -310,7 +342,7 @@ export function useGameState() {
       hapticNotification('error');
       return null;
     }
-  }, []);
+  }, [isTelegram, profile]);
 
   // Пассивный доход
   const claimPassive = useCallback(async (): Promise<PassiveResult | null> => {
