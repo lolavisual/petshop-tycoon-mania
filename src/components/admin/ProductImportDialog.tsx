@@ -34,10 +34,20 @@ interface ImportResults {
   errors: number;
 }
 
+interface ProgressState {
+  current: number;
+  total: number;
+  productName: string;
+}
+
 interface ProductImportDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (products: ImportedProduct[], options: ImportOptions) => Promise<ImportResults | null>;
+  onImport: (
+    products: ImportedProduct[], 
+    options: ImportOptions,
+    onProgress?: (current: number, total: number, productName: string) => void
+  ) => Promise<ImportResults | null>;
 }
 
 const ACCEPTED_FORMATS = '.csv,.xls,.xlsx,.yml,.yaml,.xml';
@@ -108,6 +118,7 @@ const ProductImportDialog = ({ isOpen, onClose, onImport }: ProductImportDialogP
   const [error, setError] = useState<string | null>(null);
   const [updateExisting, setUpdateExisting] = useState(true);
   const [importImages, setImportImages] = useState(true);
+  const [progress, setProgress] = useState<ProgressState | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = () => {
@@ -116,6 +127,7 @@ const ProductImportDialog = ({ isOpen, onClose, onImport }: ProductImportDialogP
     setError(null);
     setParsing(false);
     setImporting(false);
+    setProgress(null);
   };
 
   const handleClose = () => {
@@ -289,8 +301,14 @@ const ProductImportDialog = ({ isOpen, onClose, onImport }: ProductImportDialogP
     if (parsedProducts.length === 0) return;
     
     setImporting(true);
+    setProgress({ current: 0, total: parsedProducts.length, productName: '' });
+    
     try {
-      const results = await onImport(parsedProducts, { updateExisting, importImages });
+      const handleProgress = (current: number, total: number, productName: string) => {
+        setProgress({ current, total, productName });
+      };
+      
+      const results = await onImport(parsedProducts, { updateExisting, importImages }, handleProgress);
       if (results) {
         const parts = [];
         if (results.created > 0) parts.push(`создано: ${results.created}`);
@@ -306,6 +324,7 @@ const ProductImportDialog = ({ isOpen, onClose, onImport }: ProductImportDialogP
       toast.error('Ошибка импорта товаров');
     } finally {
       setImporting(false);
+      setProgress(null);
     }
   };
 
@@ -398,6 +417,34 @@ const ProductImportDialog = ({ isOpen, onClose, onImport }: ProductImportDialogP
             </div>
           )}
 
+          {/* Import Progress */}
+          {importing && progress && (
+            <div className="py-6 space-y-4">
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
+                <p className="font-medium">Импорт товаров...</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {progress.current} из {progress.total}
+                </p>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="h-full bg-primary"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(progress.current / progress.total) * 100}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+              
+              {/* Current Product */}
+              <div className="text-center text-sm text-muted-foreground truncate px-4">
+                {progress.productName}
+              </div>
+            </div>
+          )}
+
           {/* Error State */}
           {error && (
             <div className="space-y-4">
@@ -415,7 +462,7 @@ const ProductImportDialog = ({ isOpen, onClose, onImport }: ProductImportDialogP
           )}
 
           {/* Parsed Products Preview */}
-          {!parsing && !error && parsedProducts.length > 0 && (
+          {!parsing && !error && !importing && parsedProducts.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <FileText className="w-4 h-4" />
