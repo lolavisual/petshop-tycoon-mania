@@ -4,6 +4,7 @@ import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
 import { Sparkles, Gift, User, ShoppingBag, FileText, Crown } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
+import ArticlesPage from '@/components/ArticlesPage';
 
 // Компонент питомца
 const PetAvatar = ({ level, avatarVariant, hasSantaHat }: { level: number; avatarVariant: number; hasSantaHat: boolean }) => {
@@ -242,15 +243,6 @@ const ProfilePage = () => {
     </div>
   );
 };
-
-const ArticlesPage = () => (
-  <div className="p-4">
-    <h1 className="text-2xl font-bold mb-4">📝 Статьи</h1>
-    <div className="glass-card p-6 text-center text-muted-foreground">
-      Напишите статью (минимум 50 символов) и получите 1000 алмазов после модерации!
-    </div>
-  </div>
-);
 
 // Главный компонент
 const Index = () => {
