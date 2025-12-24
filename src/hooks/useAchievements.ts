@@ -189,6 +189,9 @@ export const useAchievements = () => {
     });
   }, [claimRewardMutation]);
 
+  // Count unclaimed rewards
+  const unclaimedCount = userAchievements.filter(ua => !ua.reward_claimed).length;
+
   return {
     achievements,
     userAchievements,
@@ -198,5 +201,6 @@ export const useAchievements = () => {
     claimReward,
     unlockedCount: userAchievements.length,
     totalCount: achievements.length,
+    unclaimedCount,
   };
 };
