@@ -4,7 +4,7 @@ import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
 import { useTelegramTheme } from '@/hooks/useTelegramTheme';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
-import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun } from 'lucide-react';
+import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
@@ -315,6 +315,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('game');
   const { loading, error } = useGameState();
   const { isDark, toggleTheme } = useTelegramTheme();
+  const { isMuted, toggleMute } = useSoundEffects();
 
   useEffect(() => {
     initTelegramWebApp();
@@ -339,21 +340,38 @@ const Index = () => {
       <ParallaxBackground />
       <header className="p-4 flex items-center justify-between relative z-10">
         <h1 className="text-2xl font-black text-gradient-primary">PetShop Tycoon</h1>
-        <button
-          type="button"
-          onClick={() => {
-            hapticImpact('light');
-            toggleTheme();
-          }}
-          className="p-2 rounded-full glass-card touch-manipulation active:scale-95"
-          aria-label="Переключить тему"
-        >
-          {isDark ? (
-            <Sun className="w-5 h-5 text-accent" />
-          ) : (
-            <Moon className="w-5 h-5 text-primary" />
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              hapticImpact('light');
+              toggleMute();
+            }}
+            className="p-2 rounded-full glass-card touch-manipulation active:scale-95"
+            aria-label={isMuted ? 'Включить звук' : 'Выключить звук'}
+          >
+            {isMuted ? (
+              <VolumeX className="w-5 h-5 text-muted-foreground" />
+            ) : (
+              <Volume2 className="w-5 h-5 text-primary" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              hapticImpact('light');
+              toggleTheme();
+            }}
+            className="p-2 rounded-full glass-card touch-manipulation active:scale-95"
+            aria-label="Переключить тему"
+          >
+            {isDark ? (
+              <Sun className="w-5 h-5 text-accent" />
+            ) : (
+              <Moon className="w-5 h-5 text-primary" />
+            )}
+          </button>
+        </div>
       </header>
 
       <main className="relative z-10">

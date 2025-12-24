@@ -1,7 +1,21 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
+
+const MUTE_KEY = 'petshop_sound_muted';
 
 export const useSoundEffects = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
+  const [isMuted, setIsMuted] = useState(() => {
+    const saved = localStorage.getItem(MUTE_KEY);
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem(MUTE_KEY, String(isMuted));
+  }, [isMuted]);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
+  }, []);
 
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -12,6 +26,7 @@ export const useSoundEffects = () => {
 
   // Звук тапа - короткий "клик"
   const playTap = useCallback(() => {
+    if (isMuted) return;
     try {
       const ctx = getAudioContext();
       const oscillator = ctx.createOscillator();
@@ -32,10 +47,11 @@ export const useSoundEffects = () => {
     } catch (e) {
       console.log('Sound not available');
     }
-  }, [getAudioContext]);
+  }, [getAudioContext, isMuted]);
 
   // Звук получения кристалла - звенящий
   const playCrystal = useCallback(() => {
+    if (isMuted) return;
     try {
       const ctx = getAudioContext();
       const oscillator = ctx.createOscillator();
@@ -56,10 +72,11 @@ export const useSoundEffects = () => {
     } catch (e) {
       console.log('Sound not available');
     }
-  }, [getAudioContext]);
+  }, [getAudioContext, isMuted]);
 
   // Звук открытия сундука - торжественный
   const playChest = useCallback(() => {
+    if (isMuted) return;
     try {
       const ctx = getAudioContext();
       
@@ -85,10 +102,11 @@ export const useSoundEffects = () => {
     } catch (e) {
       console.log('Sound not available');
     }
-  }, [getAudioContext]);
+  }, [getAudioContext, isMuted]);
 
   // Звук повышения уровня - победный
   const playLevelUp = useCallback(() => {
+    if (isMuted) return;
     try {
       const ctx = getAudioContext();
       const frequencies = [392, 523.25, 659.25, 783.99]; // G4, C5, E5, G5
@@ -112,7 +130,7 @@ export const useSoundEffects = () => {
     } catch (e) {
       console.log('Sound not available');
     }
-  }, [getAudioContext]);
+  }, [getAudioContext, isMuted]);
 
-  return { playTap, playCrystal, playChest, playLevelUp };
+  return { playTap, playCrystal, playChest, playLevelUp, isMuted, toggleMute };
 };
