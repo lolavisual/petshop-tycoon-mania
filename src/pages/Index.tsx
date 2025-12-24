@@ -7,8 +7,79 @@ import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun } from 'l
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
-import EnhancedTapZone from '@/components/game/EnhancedTapZone';
 import FloatingParticles from '@/components/game/FloatingParticles';
+
+// Компонент питомца с шапкой Санты
+const PetAvatar = ({ level, avatarVariant }: { level: number; avatarVariant: number }) => {
+  const pets = ['🐕', '🐈', '🐹', '🐰', '🦜'];
+  const pet = pets[avatarVariant % pets.length];
+  
+  return (
+    <div className="relative">
+      {/* Шапка Санты */}
+      <motion.div 
+        className="absolute -top-8 left-1/2 -translate-x-1/2 text-4xl z-10"
+        initial={{ y: -50, opacity: 0, rotate: -30 }}
+        animate={{ y: 0, opacity: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+      >
+        🎅
+      </motion.div>
+      <motion.div 
+        className="text-8xl select-none"
+        whileTap={{ scale: 0.9 }}
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        {pet}
+      </motion.div>
+    </div>
+  );
+};
+
+// Компонент тап-зоны с эффектами
+const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: number; x: number; y: number }[] }) => {
+  const handleTap = () => {
+    hapticImpact('medium');
+    onTap();
+  };
+
+  return (
+    <motion.button
+      type="button"
+      className="tap-zone relative w-48 h-48 rounded-full flex items-center justify-center cursor-pointer touch-manipulation"
+      style={{
+        background: 'radial-gradient(circle, hsl(var(--primary) / 0.2) 0%, transparent 70%)'
+      }}
+      whileTap={{ scale: 0.95 }}
+      onClick={handleTap}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        handleTap();
+      }}
+    >
+      <div className="absolute inset-0 rounded-full border-4 border-dashed border-primary/30 animate-spin pointer-events-none" style={{ animationDuration: '20s' }} />
+      
+      <AnimatePresence>
+        {crystals.map(crystal => (
+          <motion.div
+            key={crystal.id}
+            className="absolute text-2xl pointer-events-none"
+            style={{ left: crystal.x, top: crystal.y }}
+            initial={{ opacity: 1, y: 0, scale: 1 }}
+            animate={{ opacity: 0, y: -60, scale: 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            💎
+          </motion.div>
+        ))}
+      </AnimatePresence>
+      
+      <span className="text-lg font-bold text-primary pointer-events-none">Тапай!</span>
+    </motion.button>
+  );
+};
 
 // Навигация
 const NavBar = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) => {
@@ -87,11 +158,21 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
 // Главная страница игры
 const GamePage = () => {
   const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
-
-  const hasSantaHat = true; // Всегда показываем шапку Санты для праздничного настроения
+  const [floatingCrystals, setFloatingCrystals] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [crystalId, setCrystalId] = useState(0);
 
   const onTap = async () => {
-    hapticImpact('medium');
+    const id = crystalId;
+    setCrystalId(prev => prev + 1);
+    
+    const x = 70 + Math.random() * 60;
+    const y = 70 + Math.random() * 60;
+    setFloatingCrystals(prev => [...prev, { id, x, y }]);
+    
+    setTimeout(() => {
+      setFloatingCrystals(prev => prev.filter(c => c.id !== id));
+    }, 700);
+    
     await handleClick();
   };
 
@@ -126,12 +207,11 @@ const GamePage = () => {
         xpNext={xpForNextLevel(profile.level)}
       />
       
-      {/* Улучшенная зона тапа с анимированным питомцем */}
-      <EnhancedTapZone 
-        onTap={onTap} 
-        level={profile.level}
-        hasSantaHat={hasSantaHat}
-      />
+      {/* Питомец и зона тапа */}
+      <div className="flex flex-col items-center justify-center py-8 space-y-4">
+        <PetAvatar level={profile.level} avatarVariant={profile.avatar_variant} />
+        <TapZone onTap={onTap} crystals={floatingCrystals} />
+      </div>
       
       <button
         type="button"
