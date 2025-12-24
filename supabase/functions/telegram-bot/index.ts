@@ -1,13 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Initialize Supabase client with service role
+const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
 // System prompt for pet-focused conversational AI with sales focus
 const PET_ASSISTANT_PROMPT = `Ты — дружелюбный и заботливый помощник зоомагазина "PetShop". Твоя ГЛАВНАЯ ЦЕЛЬ — удержать клиента в разговоре и мягко подвести к покупке товаров.
@@ -81,15 +86,75 @@ interface TelegramUpdate {
   };
 }
 
-async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: any) {
+interface BroadcastRequest {
+  action: 'broadcast';
+  broadcastId: string;
+}
+
+// Subscribe user to bot
+async function subscribeUser(telegramId: number, chatId: number, firstName: string | null, username: string | null) {
+  try {
+    const { error } = await supabase
+      .from('bot_subscribers')
+      .upsert({
+        telegram_id: telegramId,
+        chat_id: chatId,
+        first_name: firstName,
+        username: username,
+        is_active: true,
+        last_message_at: new Date().toISOString(),
+      }, { onConflict: 'telegram_id' });
+
+    if (error) {
+      console.error('Error subscribing user:', error);
+    } else {
+      console.log(`User ${telegramId} subscribed/updated`);
+    }
+  } catch (err) {
+    console.error('Subscribe error:', err);
+  }
+}
+
+// Update last message time
+async function updateLastMessage(telegramId: number) {
+  try {
+    await supabase
+      .from('bot_subscribers')
+      .update({ last_message_at: new Date().toISOString() })
+      .eq('telegram_id', telegramId);
+  } catch (err) {
+    console.error('Update last message error:', err);
+  }
+}
+
+async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: any, imageUrl?: string) {
+  // If there's an image, send photo with caption
+  if (imageUrl) {
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+    const body: any = {
+      chat_id: chatId,
+      photo: imageUrl,
+      caption: text,
+      parse_mode: 'HTML',
+    };
+    if (replyMarkup) {
+      body.reply_markup = replyMarkup;
+    }
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return await response.json();
+  }
+
+  // Regular text message
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  
   const body: any = {
     chat_id: chatId,
     text,
     parse_mode: 'HTML',
   };
-  
   if (replyMarkup) {
     body.reply_markup = replyMarkup;
   }
@@ -101,7 +166,6 @@ async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: a
   });
   
   const result = await response.json();
-  console.log('Telegram send result:', result);
   return result;
 }
 
@@ -137,6 +201,106 @@ async function getAIResponse(userMessage: string, userName: string): Promise<str
   }
 }
 
+// Send broadcast to all active subscribers
+async function sendBroadcast(broadcastId: string): Promise<{ sent: number; failed: number }> {
+  console.log(`Starting broadcast ${broadcastId}`);
+  
+  // Get broadcast data
+  const { data: broadcast, error: broadcastError } = await supabase
+    .from('bot_broadcasts')
+    .select('*')
+    .eq('id', broadcastId)
+    .single();
+
+  if (broadcastError || !broadcast) {
+    console.error('Broadcast not found:', broadcastError);
+    throw new Error('Broadcast not found');
+  }
+
+  // Get all active subscribers
+  const { data: subscribers, error: subsError } = await supabase
+    .from('bot_subscribers')
+    .select('chat_id, telegram_id')
+    .eq('is_active', true);
+
+  if (subsError) {
+    console.error('Error fetching subscribers:', subsError);
+    throw new Error('Failed to fetch subscribers');
+  }
+
+  console.log(`Sending to ${subscribers?.length || 0} subscribers`);
+
+  let sent = 0;
+  let failed = 0;
+
+  // Build inline keyboard if button is specified
+  let keyboard = undefined;
+  if (broadcast.button_text && broadcast.button_url) {
+    keyboard = {
+      inline_keyboard: [
+        [{ text: broadcast.button_text, url: broadcast.button_url }]
+      ]
+    };
+  }
+
+  // Add emoji prefix based on type
+  const typeEmoji: Record<string, string> = {
+    promo: '🔥',
+    new: '✨',
+    gift: '🎁',
+    info: 'ℹ️',
+  };
+  const emoji = typeEmoji[broadcast.broadcast_type] || '';
+  const message = emoji ? `${emoji} ${broadcast.message}` : broadcast.message;
+
+  // Send to each subscriber with delay to avoid rate limits
+  for (const sub of subscribers || []) {
+    try {
+      const result = await sendTelegramMessage(
+        sub.chat_id,
+        message,
+        keyboard,
+        broadcast.image_url
+      );
+
+      if (result.ok) {
+        sent++;
+      } else {
+        console.error(`Failed to send to ${sub.telegram_id}:`, result);
+        failed++;
+        
+        // Mark as inactive if blocked
+        if (result.error_code === 403) {
+          await supabase
+            .from('bot_subscribers')
+            .update({ is_active: false })
+            .eq('telegram_id', sub.telegram_id);
+        }
+      }
+
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 50));
+    } catch (err) {
+      console.error(`Error sending to ${sub.telegram_id}:`, err);
+      failed++;
+    }
+  }
+
+  // Update broadcast status
+  await supabase
+    .from('bot_broadcasts')
+    .update({
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+      sent_count: sent,
+      failed_count: failed,
+    })
+    .eq('id', broadcastId);
+
+  console.log(`Broadcast complete: ${sent} sent, ${failed} failed`);
+  return { sent, failed };
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -144,7 +308,19 @@ serve(async (req) => {
   }
 
   try {
-    const update: TelegramUpdate = await req.json();
+    const body = await req.json();
+    
+    // Check if this is a broadcast request from admin
+    if (body.action === 'broadcast' && body.broadcastId) {
+      console.log('Processing broadcast request');
+      const result = await sendBroadcast(body.broadcastId);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Regular Telegram webhook update
+    const update: TelegramUpdate = body;
     console.log('Received update:', JSON.stringify(update));
 
     if (!update.message?.text) {
@@ -154,8 +330,13 @@ serve(async (req) => {
     }
 
     const chatId = update.message.chat.id;
+    const telegramId = update.message.from.id;
     const text = update.message.text;
     const userName = update.message.from.first_name || 'друг';
+    const username = update.message.from.username || null;
+
+    // Auto-subscribe user on any message
+    await subscribeUser(telegramId, chatId, userName, username);
 
     // Handle /start command
     if (text === '/start') {
@@ -230,6 +411,9 @@ serve(async (req) => {
 
     // For any other message, use AI to respond
     console.log(`Processing AI request for: "${text}" from ${userName}`);
+    
+    // Update last message time
+    await updateLastMessage(telegramId);
     
     // Send typing action
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendChatAction`, {
