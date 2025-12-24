@@ -4,14 +4,17 @@ import { useAdmin, AdminStats, AdminUser, AdminArticle } from '@/hooks/useAdmin'
 import { 
   Shield, Users, FileText, BarChart3, Send, Ban, 
   CheckCircle, XCircle, Search, ChevronLeft, ChevronRight,
-  Gift, Loader2, Eye, AlertTriangle, Package
+  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone
 } from 'lucide-react';
 import ProductsAdminTab from '@/components/ProductsAdminTab';
+import PromotionsAdminTab from '@/components/admin/PromotionsAdminTab';
+import QuizzesAdminTab from '@/components/admin/QuizzesAdminTab';
+import BroadcastsAdminTab from '@/components/admin/BroadcastsAdminTab';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products';
+type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'mailings';
 
 const AdminPage = () => {
   const [adminSecret, setAdminSecret] = useState('');
@@ -235,8 +238,11 @@ const AdminPage = () => {
           { id: 'stats', icon: BarChart3, label: 'Статистика' },
           { id: 'users', icon: Users, label: 'Пользователи' },
           { id: 'articles', icon: FileText, label: 'Статьи' },
-          { id: 'broadcast', icon: Send, label: 'Рассылка' },
           { id: 'products', icon: Package, label: 'Товары' },
+          { id: 'promotions', icon: Tag, label: 'Акции' },
+          { id: 'quizzes', icon: HelpCircle, label: 'Квизы' },
+          { id: 'mailings', icon: Megaphone, label: 'Рассылки' },
+          { id: 'broadcast', icon: Send, label: 'Игра' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -539,6 +545,21 @@ const AdminPage = () => {
           {/* Товары */}
           {activeTab === 'products' && (
             <ProductsAdminTab adminSecret={adminSecret} />
+          )}
+
+          {/* Акции */}
+          {activeTab === 'promotions' && (
+            <PromotionsAdminTab />
+          )}
+
+          {/* Квизы */}
+          {activeTab === 'quizzes' && (
+            <QuizzesAdminTab />
+          )}
+
+          {/* Рассылки по товарам */}
+          {activeTab === 'mailings' && (
+            <BroadcastsAdminTab />
           )}
         </AnimatePresence>
       </div>
