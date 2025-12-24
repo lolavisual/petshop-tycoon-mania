@@ -8,6 +8,7 @@ import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2,
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
 import AchievementsPage from '@/components/AchievementsPage';
+import { useAchievements } from '@/hooks/useAchievements';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import FloatingParticles from '@/components/game/FloatingParticles';
 // Компонент питомца с шапкой Санты
@@ -126,12 +127,12 @@ const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: numbe
 };
 
 // Навигация
-const NavBar = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) => {
+const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements }: { activeTab: string; setActiveTab: (tab: string) => void; unclaimedAchievements: number }) => {
   const tabs = [
-    { id: 'game', icon: Sparkles, label: 'Игра' },
-    { id: 'achievements', icon: Trophy, label: 'Награды' },
-    { id: 'shop', icon: ShoppingBag, label: 'Магазин' },
-    { id: 'profile', icon: User, label: 'Профиль' },
+    { id: 'game', icon: Sparkles, label: 'Игра', badge: 0 },
+    { id: 'achievements', icon: Trophy, label: 'Награды', badge: unclaimedAchievements },
+    { id: 'shop', icon: ShoppingBag, label: 'Магазин', badge: 0 },
+    { id: 'profile', icon: User, label: 'Профиль', badge: 0 },
   ];
 
   return (
@@ -141,7 +142,7 @@ const NavBar = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: 
           <button
             key={tab.id}
             type="button"
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors active:scale-95 touch-manipulation ${
+            className={`relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors active:scale-95 touch-manipulation ${
               activeTab === tab.id ? 'text-primary' : 'text-muted-foreground'
             }`}
             onClick={() => {
@@ -149,7 +150,18 @@ const NavBar = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: 
               setActiveTab(tab.id);
             }}
           >
-            <tab.icon className="w-5 h-5" />
+            <div className="relative">
+              <tab.icon className="w-5 h-5" />
+              {tab.badge > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1"
+                >
+                  {tab.badge > 9 ? '9+' : tab.badge}
+                </motion.span>
+              )}
+            </div>
             <span className="text-xs font-medium">{tab.label}</span>
             {activeTab === tab.id && (
               <motion.div
@@ -317,6 +329,7 @@ const Index = () => {
   const { loading, error } = useGameState();
   const { isDark, toggleTheme } = useTelegramTheme();
   const { isMuted, toggleMute } = useSoundEffects();
+  const { unclaimedCount } = useAchievements();
 
   useEffect(() => {
     initTelegramWebApp();
@@ -384,7 +397,7 @@ const Index = () => {
         </AnimatePresence>
       </main>
 
-      <NavBar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <NavBar activeTab={activeTab} setActiveTab={setActiveTab} unclaimedAchievements={unclaimedCount} />
     </div>
   );
 };
