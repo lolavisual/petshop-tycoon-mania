@@ -13,7 +13,22 @@ export interface PetProduct {
   image_url: string | null;
   icon: string;
   in_stock: boolean;
+  created_at: string;
 }
+
+// Helper to check if product is new (created within last 7 days)
+export const isNewProduct = (createdAt: string): boolean => {
+  const created = new Date(createdAt);
+  const now = new Date();
+  const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays <= 7;
+};
+
+// Helper to check if product is a "hit" (based on price range or other criteria)
+export const isHitProduct = (product: PetProduct): boolean => {
+  // For demo: products with price > 1000 are "hits"
+  return product.price >= 1000 && product.price <= 5000;
+};
 
 export type CategoryType = 'all' | 'cats' | 'dogs' | 'birds' | 'accessories';
 
