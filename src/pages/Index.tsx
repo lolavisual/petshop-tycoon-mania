@@ -1,12 +1,303 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { initTelegramWebApp, isTelegramWebApp, hapticImpact } from '@/lib/telegram';
+import { useGameState } from '@/hooks/useGameState';
+import { Gem, Sparkles, Gift, User, ShoppingBag, FileText, Crown } from 'lucide-react';
 
-const Index = () => {
+// Компонент питомца
+const PetAvatar = ({ level, avatarVariant, hasSantaHat }: { level: number; avatarVariant: number; hasSantaHat: boolean }) => {
+  const pets = ['🐕', '🐈', '🐹', '🐰', '🦜'];
+  const pet = pets[avatarVariant % pets.length];
+  
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="relative">
+      {hasSantaHat && level >= 15 && (
+        <motion.div 
+          className="absolute -top-8 left-1/2 -translate-x-1/2 text-4xl santa-hat-enter z-10"
+          initial={{ y: -50, opacity: 0, rotate: -30 }}
+          animate={{ y: 0, opacity: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        >
+          🎅
+        </motion.div>
+      )}
+      <motion.div 
+        className="text-8xl select-none"
+        whileTap={{ scale: 0.9 }}
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        {pet}
+      </motion.div>
+    </div>
+  );
+};
+
+// Компонент тап-зоны
+const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: number; x: number; y: number }[] }) => {
+  return (
+    <motion.div
+      className="tap-zone relative w-48 h-48 rounded-full flex items-center justify-center"
+      style={{
+        background: 'radial-gradient(circle, hsl(var(--primary) / 0.2) 0%, transparent 70%)'
+      }}
+      whileTap={{ scale: 0.95 }}
+      onTap={() => {
+        hapticImpact('medium');
+        onTap();
+      }}
+    >
+      <div className="absolute inset-0 rounded-full border-4 border-dashed border-primary/30 animate-spin" style={{ animationDuration: '20s' }} />
+      
+      <AnimatePresence>
+        {crystals.map(crystal => (
+          <motion.div
+            key={crystal.id}
+            className="absolute text-2xl pointer-events-none"
+            style={{ left: crystal.x, top: crystal.y }}
+            initial={{ opacity: 1, y: 0, scale: 1 }}
+            animate={{ opacity: 0, y: -60, scale: 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            💎
+          </motion.div>
+        ))}
+      </AnimatePresence>
+      
+      <span className="text-lg font-bold text-primary">Тапай!</span>
+    </motion.div>
+  );
+};
+
+// Навигация
+const NavBar = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) => {
+  const tabs = [
+    { id: 'game', icon: Sparkles, label: 'Игра' },
+    { id: 'shop', icon: ShoppingBag, label: 'Магазин' },
+    { id: 'profile', icon: User, label: 'Профиль' },
+    { id: 'articles', icon: FileText, label: 'Статьи' },
+  ];
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 glass-card rounded-t-3xl px-4 py-3 safe-area-inset-bottom">
+      <div className="flex justify-around items-center">
+        {tabs.map(tab => (
+          <motion.button
+            key={tab.id}
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${
+              activeTab === tab.id ? 'text-primary' : 'text-muted-foreground'
+            }`}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => {
+              hapticImpact('light');
+              setActiveTab(tab.id);
+            }}
+          >
+            <tab.icon className="w-5 h-5" />
+            <span className="text-xs font-medium">{tab.label}</span>
+            {activeTab === tab.id && (
+              <motion.div
+                className="absolute -bottom-1 w-1 h-1 rounded-full bg-primary"
+                layoutId="navIndicator"
+              />
+            )}
+          </motion.button>
+        ))}
       </div>
+    </nav>
+  );
+};
+
+// Статистика
+const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number; diamonds: number; level: number; xp: number; xpNext: number }) => {
+  const xpPercent = Math.min((xp / xpNext) * 100, 100);
+  
+  return (
+    <div className="glass-card p-4 rounded-2xl space-y-3">
+      <div className="flex justify-between items-center">
+        <div className="currency-crystal text-lg">
+          💎 {Math.floor(crystals).toLocaleString()}
+        </div>
+        <div className="currency-diamond text-lg">
+          💎💎 {Math.floor(diamonds).toLocaleString()}
+        </div>
+      </div>
+      
+      <div className="space-y-1">
+        <div className="flex justify-between text-sm">
+          <span className="font-bold flex items-center gap-1">
+            <Crown className="w-4 h-4 text-accent" /> Уровень {level}
+          </span>
+          <span className="text-muted-foreground">{Math.floor(xp)}/{xpNext} XP</span>
+        </div>
+        <div className="progress-xp">
+          <motion.div 
+            className="progress-xp-fill"
+            initial={{ width: 0 }}
+            animate={{ width: `${xpPercent}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Главная страница игры
+const GamePage = () => {
+  const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
+  const [floatingCrystals, setFloatingCrystals] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [crystalId, setCrystalId] = useState(0);
+
+  const onTap = async () => {
+    const id = crystalId;
+    setCrystalId(prev => prev + 1);
+    
+    const x = 70 + Math.random() * 60;
+    const y = 70 + Math.random() * 60;
+    setFloatingCrystals(prev => [...prev, { id, x, y }]);
+    
+    setTimeout(() => {
+      setFloatingCrystals(prev => prev.filter(c => c.id !== id));
+    }, 700);
+    
+    await handleClick();
+  };
+
+  const hasSantaHat = accessories.some(a => a.name === 'santa_hat' && a.is_equipped);
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          className="text-4xl"
+        >
+          🐾
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div 
+      className="p-4 space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <StatsBar 
+        crystals={profile.crystals} 
+        diamonds={profile.diamonds}
+        level={profile.level}
+        xp={profile.xp}
+        xpNext={xpForNextLevel(profile.level)}
+      />
+      
+      <div className="flex flex-col items-center justify-center py-8 space-y-4">
+        <PetAvatar level={profile.level} avatarVariant={profile.avatar_variant} hasSantaHat={hasSantaHat} />
+        <TapZone onTap={onTap} crystals={floatingCrystals} />
+      </div>
+      
+      <motion.button
+        className={`w-full btn-gradient-accent py-4 rounded-2xl flex items-center justify-center gap-3 ${!canClaimChest() ? 'opacity-50' : ''}`}
+        whileTap={canClaimChest() ? { scale: 0.98 } : {}}
+        onClick={() => canClaimChest() && claimChest()}
+        disabled={!canClaimChest()}
+      >
+        <Gift className="w-6 h-6" />
+        <span className="font-bold">
+          {canClaimChest() ? 'Открыть сундук!' : `Сундук через ${timeUntilChest()}`}
+        </span>
+      </motion.button>
+      
+      {profile.streak_days > 0 && (
+        <div className="text-center text-sm text-muted-foreground">
+          🔥 Стрик: {profile.streak_days} дней
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+// Заглушки для других страниц
+const ShopPage = () => (
+  <div className="p-4">
+    <h1 className="text-2xl font-bold mb-4">🛒 Магазин</h1>
+    <div className="glass-card p-6 text-center text-muted-foreground">
+      Скоро здесь появятся товары!
+    </div>
+  </div>
+);
+
+const ProfilePage = () => {
+  const { profile } = useGameState();
+  
+  return (
+    <div className="p-4 space-y-4">
+      <h1 className="text-2xl font-bold">👤 Профиль</h1>
+      {profile && (
+        <div className="glass-card p-4 space-y-3">
+          <p><strong>Имя:</strong> {profile.first_name || 'Игрок'}</p>
+          <p><strong>Уровень:</strong> {profile.level}</p>
+          <p><strong>Кристаллы:</strong> {Math.floor(profile.crystals)}</p>
+          <p><strong>Алмазы:</strong> {Math.floor(profile.diamonds)}</p>
+          <p><strong>Стрик:</strong> {profile.streak_days} дней</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ArticlesPage = () => (
+  <div className="p-4">
+    <h1 className="text-2xl font-bold mb-4">📝 Статьи</h1>
+    <div className="glass-card p-6 text-center text-muted-foreground">
+      Напишите статью (минимум 50 символов) и получите 1000 алмазов после модерации!
+    </div>
+  </div>
+);
+
+// Главный компонент
+const Index = () => {
+  const [activeTab, setActiveTab] = useState('game');
+  const { loading, error } = useGameState();
+
+  useEffect(() => {
+    initTelegramWebApp();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="parallax-bg min-h-screen flex items-center justify-center">
+        <motion.div
+          className="text-6xl"
+          animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          🐾
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="parallax-bg min-h-screen pb-24">
+      <header className="p-4 text-center">
+        <h1 className="text-2xl font-black text-gradient-primary">PetShop Tycoon</h1>
+      </header>
+
+      <main>
+        <AnimatePresence mode="wait">
+          {activeTab === 'game' && <GamePage key="game" />}
+          {activeTab === 'shop' && <ShopPage key="shop" />}
+          {activeTab === 'profile' && <ProfilePage key="profile" />}
+          {activeTab === 'articles' && <ArticlesPage key="articles" />}
+        </AnimatePresence>
+      </main>
+
+      <NavBar activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   );
 };
