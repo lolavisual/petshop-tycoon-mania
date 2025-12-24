@@ -36,7 +36,7 @@ const ProductsAdminTab = ({ adminSecret }: ProductsAdminTabProps) => {
     uploadImage,
     updateProduct,
     createProduct,
-    bulkCreateProducts,
+    bulkUpsertProducts,
     deleteProduct,
   } = useProductAdmin(adminSecret);
 
@@ -120,18 +120,21 @@ const ProductsAdminTab = ({ adminSecret }: ProductsAdminTabProps) => {
     await deleteProduct(productId);
   };
 
-  const handleImportProducts = async (importedProducts: Array<{
-    name_ru: string;
-    name?: string;
-    description_ru?: string;
-    description?: string;
-    category?: string;
-    price?: number;
-    currency?: string;
-    icon?: string;
-    in_stock?: boolean;
-    image_url?: string;
-  }>) => {
+  const handleImportProducts = async (
+    importedProducts: Array<{
+      name_ru: string;
+      name?: string;
+      description_ru?: string;
+      description?: string;
+      category?: string;
+      price?: number;
+      currency?: string;
+      icon?: string;
+      in_stock?: boolean;
+      image_url?: string;
+    }>,
+    options: { updateExisting: boolean; importImages: boolean }
+  ) => {
     const productsToCreate = importedProducts.map(p => ({
       name: p.name || p.name_ru,
       name_ru: p.name_ru,
@@ -146,7 +149,7 @@ const ProductsAdminTab = ({ adminSecret }: ProductsAdminTabProps) => {
       created_at: new Date().toISOString(),
     }));
     
-    await bulkCreateProducts(productsToCreate);
+    return await bulkUpsertProducts(productsToCreate, options);
   };
 
   if (loading) {
