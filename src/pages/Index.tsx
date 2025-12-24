@@ -5,6 +5,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { Sparkles, Gift, User, ShoppingBag, FileText, Crown } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
+import { ParallaxBackground } from '@/components/ParallaxBackground';
 
 // Компонент питомца
 const PetAvatar = ({ level, avatarVariant, hasSantaHat }: { level: number; avatarVariant: number; hasSantaHat: boolean }) => {
@@ -268,12 +269,13 @@ const Index = () => {
   }
 
   return (
-    <div className="parallax-bg min-h-screen pb-24">
-      <header className="p-4 text-center">
+    <div className="min-h-screen pb-24 relative">
+      <ParallaxBackground />
+      <header className="p-4 text-center relative z-10">
         <h1 className="text-2xl font-black text-gradient-primary">PetShop Tycoon</h1>
       </header>
 
-      <main>
+      <main className="relative z-10">
         <AnimatePresence mode="wait">
           {activeTab === 'game' && <GamePage key="game" />}
           {activeTab === 'shop' && <ShopPage key="shop" />}
