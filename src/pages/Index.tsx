@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
-import { Sparkles, Gift, User, ShoppingBag, FileText, Crown } from 'lucide-react';
+import { useTelegramTheme } from '@/hooks/useTelegramTheme';
+import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
@@ -256,6 +257,7 @@ const ProfilePage = () => {
 const Index = () => {
   const [activeTab, setActiveTab] = useState('game');
   const { loading, error } = useGameState();
+  const { isDark, toggleTheme } = useTelegramTheme();
 
   useEffect(() => {
     initTelegramWebApp();
@@ -278,8 +280,23 @@ const Index = () => {
   return (
     <div className="min-h-screen pb-24 relative">
       <ParallaxBackground />
-      <header className="p-4 text-center relative z-10">
+      <header className="p-4 flex items-center justify-between relative z-10">
         <h1 className="text-2xl font-black text-gradient-primary">PetShop Tycoon</h1>
+        <button
+          type="button"
+          onClick={() => {
+            hapticImpact('light');
+            toggleTheme();
+          }}
+          className="p-2 rounded-full glass-card touch-manipulation active:scale-95"
+          aria-label="Переключить тему"
+        >
+          {isDark ? (
+            <Sun className="w-5 h-5 text-accent" />
+          ) : (
+            <Moon className="w-5 h-5 text-primary" />
+          )}
+        </button>
       </header>
 
       <main className="relative z-10">
