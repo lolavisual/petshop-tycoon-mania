@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 import { AlertCircle, RefreshCw, Smartphone } from 'lucide-react';
@@ -10,9 +10,18 @@ interface TelegramAuthGateProps {
 
 export const TelegramAuthGate = ({ children }: TelegramAuthGateProps) => {
   const { loading, error, isAuthenticated, isTelegram, retry } = useTelegramAuth();
+  const [showContent, setShowContent] = useState(false);
+
+  // В режиме разработки показываем контент сразу после небольшой задержки
+  useEffect(() => {
+    if (import.meta.env.DEV && !isTelegram) {
+      const timer = setTimeout(() => setShowContent(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isTelegram]);
 
   // Загрузка
-  if (loading) {
+  if (loading && !showContent) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
         <motion.div
@@ -37,8 +46,8 @@ export const TelegramAuthGate = ({ children }: TelegramAuthGateProps) => {
     );
   }
 
-  // Ошибка авторизации
-  if (error) {
+  // Ошибка авторизации (только в Telegram)
+  if (error && isTelegram) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
         <motion.div
@@ -59,56 +68,40 @@ export const TelegramAuthGate = ({ children }: TelegramAuthGateProps) => {
     );
   }
 
-  // Не в Telegram
-  if (!isTelegram && !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="text-7xl mb-6"
-        >
-          🐕
-        </motion.div>
-        <Smartphone className="w-12 h-12 text-primary mb-4" />
-        <h1 className="text-2xl font-black text-gradient-primary mb-4">
-          PetShop Tycoon
-        </h1>
-        <p className="text-muted-foreground mb-6 max-w-sm">
-          Это приложение работает как Telegram Mini App. 
-          Откройте бота в Telegram для игры!
-        </p>
-        <motion.a
-          href="https://t.me/PetShopTycoonBot"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-gradient-primary px-6 py-3 rounded-xl font-bold text-primary-foreground inline-flex items-center gap-2"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <span>🤖</span>
-          Открыть в Telegram
-        </motion.a>
-        
-        {/* Демо-режим для разработки */}
-        {import.meta.env.DEV && (
-          <div className="mt-8 p-4 border border-dashed border-muted-foreground/30 rounded-xl">
-            <p className="text-sm text-muted-foreground mb-2">
-              🛠️ Режим разработки
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.reload()}
-            >
-              Обновить страницу
-            </Button>
-          </div>
-        )}
-      </div>
-    );
+  // В режиме разработки или в Telegram - показываем контент
+  if (showContent || isTelegram || isAuthenticated) {
+    return <>{children}</>;
   }
 
-  // Авторизованы или в режиме разработки
-  return <>{children}</>;
+  // Не в Telegram и не в DEV режиме
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="text-7xl mb-6"
+      >
+        🐕
+      </motion.div>
+      <Smartphone className="w-12 h-12 text-primary mb-4" />
+      <h1 className="text-2xl font-black text-gradient-primary mb-4">
+        PetShop Tycoon
+      </h1>
+      <p className="text-muted-foreground mb-6 max-w-sm">
+        Это приложение работает как Telegram Mini App. 
+        Откройте бота в Telegram для игры!
+      </p>
+      <motion.a
+        href="https://t.me/petshopgame_bot"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn-gradient-primary px-6 py-3 rounded-xl font-bold text-primary-foreground inline-flex items-center gap-2"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <span>🤖</span>
+        Открыть в Telegram
+      </motion.a>
+    </div>
+  );
 };
