@@ -126,7 +126,7 @@ const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: numbe
   );
 };
 
-// Навигация
+// Навигация - Enhanced
 const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements }: { activeTab: string; setActiveTab: (tab: string) => void; unclaimedAchievements: number }) => {
   const tabs = [
     { id: 'game', icon: Sparkles, label: 'Игра', badge: 0 },
@@ -136,78 +136,120 @@ const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements }: { activeTab:
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 glass-card rounded-t-3xl px-4 py-3 safe-area-inset-bottom z-50">
-      <div className="flex justify-around items-center">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors active:scale-95 touch-manipulation ${
-              activeTab === tab.id ? 'text-primary' : 'text-muted-foreground'
-            }`}
-            onClick={() => {
-              hapticImpact('light');
-              setActiveTab(tab.id);
-            }}
-          >
-            <div className="relative">
-              <tab.icon className="w-5 h-5" />
-              {tab.badge > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1"
+    <nav className="fixed bottom-0 left-0 right-0 z-50">
+      {/* Gradient border top */}
+      <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      
+      <div className="glass-card-premium rounded-t-3xl px-2 py-3 mx-2 mb-0 safe-area-inset-bottom">
+        <div className="flex justify-around items-center">
+          {tabs.map(tab => {
+            const isActive = activeTab === tab.id;
+            const TabIcon = tab.icon;
+            
+            return (
+              <motion.button
+                key={tab.id}
+                type="button"
+                className={`nav-button ${isActive ? 'active' : ''}`}
+                onClick={() => {
+                  hapticImpact('light');
+                  setActiveTab(tab.id);
+                }}
+                whileTap={{ scale: 0.92 }}
+              >
+                <div className="relative">
+                  <motion.div
+                    animate={isActive ? { y: [0, -3, 0] } : {}}
+                    transition={{ duration: 0.4 }}
+                  >
+                    <TabIcon className={`w-5 h-5 transition-all duration-300 ${isActive ? 'icon-glow' : ''}`} />
+                  </motion.div>
+                  
+                  {tab.badge > 0 && (
+                    <motion.span
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      className="notification-badge"
+                    >
+                      {tab.badge > 9 ? '9+' : tab.badge}
+                    </motion.span>
+                  )}
+                </div>
+                
+                <motion.span 
+                  className={`text-xs font-semibold transition-all duration-300 ${isActive ? 'text-primary' : ''}`}
+                  animate={isActive ? { scale: 1.05 } : { scale: 1 }}
                 >
-                  {tab.badge > 9 ? '9+' : tab.badge}
+                  {tab.label}
                 </motion.span>
-              )}
-            </div>
-            <span className="text-xs font-medium">{tab.label}</span>
-            {activeTab === tab.id && (
-              <motion.div
-                className="absolute -bottom-1 w-1 h-1 rounded-full bg-primary"
-                layoutId="navIndicator"
-              />
-            )}
-          </button>
-        ))}
+                
+                {isActive && (
+                  <motion.div
+                    className="nav-indicator-pill"
+                    layoutId="navPill"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
 };
 
-// Статистика
+// Статистика - Enhanced
 const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number; diamonds: number; level: number; xp: number; xpNext: number }) => {
   const xpPercent = Math.min((xp / xpNext) * 100, 100);
   
   return (
-    <div className="glass-card p-4 rounded-2xl space-y-3">
+    <motion.div 
+      className="stats-card"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <div className="flex justify-between items-center">
-        <div className="currency-crystal text-lg">
-          💎 {Math.floor(crystals).toLocaleString()}
-        </div>
-        <div className="currency-diamond text-lg">
-          💎💎 {Math.floor(diamonds).toLocaleString()}
-        </div>
+        <motion.div 
+          className="currency-crystal text-lg"
+          whileHover={{ scale: 1.05 }}
+        >
+          <span className="text-2xl">💎</span>
+          <span>{Math.floor(crystals).toLocaleString()}</span>
+        </motion.div>
+        <motion.div 
+          className="currency-diamond text-lg"
+          whileHover={{ scale: 1.05 }}
+        >
+          <span className="text-2xl">💠</span>
+          <span>{Math.floor(diamonds).toLocaleString()}</span>
+        </motion.div>
       </div>
       
-      <div className="space-y-1">
+      <div className="space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="font-bold flex items-center gap-1">
-            <Crown className="w-4 h-4 text-accent" /> Уровень {level}
+          <span className="font-bold flex items-center gap-2">
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Crown className="w-5 h-5 text-accent icon-glow" />
+            </motion.div>
+            <span className="text-gradient-primary">Уровень {level}</span>
           </span>
-          <span className="text-muted-foreground">{Math.floor(xp)}/{xpNext} XP</span>
+          <span className="text-muted-foreground font-medium">{Math.floor(xp)}/{xpNext} XP</span>
         </div>
         <div className="progress-xp">
           <motion.div 
             className="progress-xp-fill"
             initial={{ width: 0 }}
             animate={{ width: `${xpPercent}%` }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

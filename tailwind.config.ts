@@ -137,6 +137,36 @@ export default {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
         },
+        "glow-pulse": {
+          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.3)" },
+          "50%": { boxShadow: "0 0 40px hsl(var(--primary) / 0.6)" },
+        },
+        "slide-in-bottom": {
+          "0%": { transform: "translateY(20px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
+        "card-hover": {
+          "0%": { transform: "translateY(0) scale(1)" },
+          "100%": { transform: "translateY(-4px) scale(1.02)" },
+        },
+        "icon-bounce": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-4px)" },
+        },
+        "nav-indicator": {
+          "0%": { width: "4px", opacity: "0" },
+          "100%": { width: "24px", opacity: "1" },
+        },
+        "shine": {
+          "0%": { left: "-100%", opacity: "0" },
+          "50%": { opacity: "1" },
+          "100%": { left: "100%", opacity: "0" },
+        },
+        "badge-pop": {
+          "0%": { transform: "scale(0) rotate(-180deg)" },
+          "60%": { transform: "scale(1.2) rotate(10deg)" },
+          "100%": { transform: "scale(1) rotate(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -151,6 +181,13 @@ export default {
         "float": "float 3s ease-in-out infinite",
         "wiggle": "wiggle 0.3s ease-in-out",
         "shimmer": "shimmer 2s infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        "slide-in-bottom": "slide-in-bottom 0.4s ease-out",
+        "card-hover": "card-hover 0.3s ease-out forwards",
+        "icon-bounce": "icon-bounce 0.6s ease-in-out",
+        "nav-indicator": "nav-indicator 0.3s ease-out forwards",
+        "shine": "shine 1.5s ease-in-out infinite",
+        "badge-pop": "badge-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
       boxShadow: {
         "glass": "0 8px 32px 0 rgba(0, 0, 0, 0.1)",
