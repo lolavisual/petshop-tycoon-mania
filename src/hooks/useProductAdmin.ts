@@ -115,12 +115,19 @@ export const useProductAdmin = (adminSecret: string) => {
 
   const bulkUpsertProducts = async (
     products: Omit<PetProduct, 'id'>[],
-    options: { updateExisting: boolean; importImages: boolean } = { updateExisting: false, importImages: false }
+    options: { updateExisting: boolean; importImages: boolean } = { updateExisting: false, importImages: false },
+    onProgress?: (current: number, total: number, productName: string) => void
   ) => {
     try {
       const results = { created: 0, updated: 0, errors: 0 };
+      const total = products.length;
       
-      for (const product of products) {
+      for (let i = 0; i < products.length; i++) {
+        const product = products[i];
+        
+        // Report progress
+        onProgress?.(i + 1, total, product.name_ru);
+        
         // Check if product exists by name
         const { data: existing } = await supabase
           .from('pet_products')

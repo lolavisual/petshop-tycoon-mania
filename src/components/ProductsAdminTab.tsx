@@ -133,7 +133,8 @@ const ProductsAdminTab = ({ adminSecret }: ProductsAdminTabProps) => {
       in_stock?: boolean;
       image_url?: string;
     }>,
-    options: { updateExisting: boolean; importImages: boolean }
+    options: { updateExisting: boolean; importImages: boolean },
+    onProgress?: (current: number, total: number, productName: string) => void
   ) => {
     const productsToCreate = importedProducts.map(p => ({
       name: p.name || p.name_ru,
@@ -149,7 +150,7 @@ const ProductsAdminTab = ({ adminSecret }: ProductsAdminTabProps) => {
       created_at: new Date().toISOString(),
     }));
     
-    return await bulkUpsertProducts(productsToCreate, options);
+    return await bulkUpsertProducts(productsToCreate, options, onProgress);
   };
 
   if (loading) {
