@@ -132,10 +132,19 @@ export function initTelegramWebApp() {
     webApp.expand();
     webApp.enableClosingConfirmation();
     
-    // Устанавливаем цвета темы в зависимости от темы Telegram
+    // Применяем тему Telegram к HTML
     const isDark = webApp.colorScheme === 'dark';
-    const headerColor = isDark ? '#1a1a2e' : '#FFF5EB';
-    const bgColor = isDark ? '#16213e' : '#FFF5EB';
+    const root = document.documentElement;
+    
+    if (isDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    
+    // Устанавливаем цвета темы в зависимости от темы Telegram
+    const headerColor = isDark ? '#1a1a1e' : '#FFF5EB';
+    const bgColor = isDark ? '#141418' : '#FFF5EB';
     
     webApp.setHeaderColor(headerColor);
     webApp.setBackgroundColor(bgColor);
