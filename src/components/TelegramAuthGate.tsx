@@ -12,9 +12,9 @@ export const TelegramAuthGate = ({ children }: TelegramAuthGateProps) => {
   const { loading, error, isAuthenticated, isTelegram, retry } = useTelegramAuth();
   const [showContent, setShowContent] = useState(false);
 
-  // В режиме разработки показываем контент сразу после небольшой задержки
+  // В браузере (не в Telegram) показываем контент сразу после небольшой задержки
   useEffect(() => {
-    if (import.meta.env.DEV && !isTelegram) {
+    if (!isTelegram) {
       const timer = setTimeout(() => setShowContent(true), 500);
       return () => clearTimeout(timer);
     }
