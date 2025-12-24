@@ -132,16 +132,15 @@ const PetShopPage = () => {
         </motion.button>
       )}
 
-      {/* Категории */}
+      {/* Категории - Enhanced */}
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-        {categories.map((cat) => (
+        {categories.map((cat, index) => (
           <motion.button
             key={cat}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-              selectedCategory === cat
-                ? 'btn-gradient-primary'
-                : 'glass-card text-muted-foreground hover:text-foreground'
-            }`}
+            className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
               hapticImpact('light');
@@ -149,7 +148,7 @@ const PetShopPage = () => {
               setShowFavoritesOnly(false);
             }}
           >
-            <span className="mr-1">{categoryLabels[cat].icon}</span>
+            <span className="mr-1.5">{categoryLabels[cat].icon}</span>
             {categoryLabels[cat].label}
           </motion.button>
         ))}
@@ -184,7 +183,8 @@ const PetShopPage = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`glass-card rounded-2xl flex flex-col overflow-hidden relative ${
+                  whileHover={{ y: -4 }}
+                  className={`product-card flex flex-col relative ${
                     !product.in_stock ? 'opacity-70' : ''
                   } ${promo ? 'ring-2 ring-primary/50' : ''}`}
                 >
