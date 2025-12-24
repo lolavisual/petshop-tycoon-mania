@@ -172,6 +172,51 @@ export type Database = {
           },
         ]
       }
+      pet_products: {
+        Row: {
+          category: string
+          created_at: string
+          currency: string
+          description: string | null
+          description_ru: string | null
+          icon: string
+          id: string
+          image_url: string | null
+          in_stock: boolean
+          name: string
+          name_ru: string
+          price: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean
+          name: string
+          name_ru: string
+          price?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          image_url?: string | null
+          in_stock?: boolean
+          name?: string
+          name_ru?: string
+          price?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_variant: number
