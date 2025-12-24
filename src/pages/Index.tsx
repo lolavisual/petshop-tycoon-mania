@@ -16,15 +16,47 @@ const PetAvatar = ({ level, avatarVariant }: { level: number; avatarVariant: num
   
   return (
     <div className="relative">
-      {/* Шапка Санты */}
+      {/* Новогодние украшения вокруг питомца */}
       <motion.div 
-        className="absolute -top-8 left-1/2 -translate-x-1/2 text-4xl z-10"
+        className="absolute -top-12 -left-8 text-2xl"
+        animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      >
+        ❄️
+      </motion.div>
+      <motion.div 
+        className="absolute -top-10 -right-8 text-2xl"
+        animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.2, 1] }}
+        transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+      >
+        ⭐
+      </motion.div>
+      <motion.div 
+        className="absolute top-0 -left-12 text-xl"
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        🎄
+      </motion.div>
+      <motion.div 
+        className="absolute top-0 -right-12 text-xl"
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 2.2, repeat: Infinity, delay: 0.3 }}
+      >
+        🎁
+      </motion.div>
+      
+      {/* Шапка Санты (красная шапочка) */}
+      <motion.div 
+        className="absolute -top-6 left-1/2 -translate-x-1/2 z-10 text-3xl"
         initial={{ y: -50, opacity: 0, rotate: -30 }}
-        animate={{ y: 0, opacity: 1, rotate: 0 }}
+        animate={{ y: 0, opacity: 1, rotate: 15 }}
         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
       >
-        🎅
+        🧢
       </motion.div>
+      
+      {/* Питомец */}
       <motion.div 
         className="text-8xl select-none"
         whileTap={{ scale: 0.9 }}
@@ -32,6 +64,17 @@ const PetAvatar = ({ level, avatarVariant }: { level: number; avatarVariant: num
         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
       >
         {pet}
+      </motion.div>
+      
+      {/* Снежинки внизу */}
+      <motion.div 
+        className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-2 text-lg"
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <span>❄️</span>
+        <span>✨</span>
+        <span>❄️</span>
       </motion.div>
     </div>
   );
