@@ -59,6 +59,54 @@ export type Database = {
         }
         Relationships: []
       }
+      achievements: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          description_ru: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          name_ru: string
+          requirement_type: string
+          requirement_value: number
+          reward_crystals: number
+          reward_diamonds: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ru: string
+          requirement_type: string
+          requirement_value?: number
+          reward_crystals?: number
+          reward_diamonds?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ru?: string
+          requirement_type?: string
+          requirement_value?: number
+          reward_crystals?: number
+          reward_diamonds?: number
+        }
+        Relationships: []
+      }
       admin_config: {
         Row: {
           admin_telegram_id: number
@@ -596,6 +644,45 @@ export type Database = {
           },
           {
             foreignKeyName: "user_accessories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          reward_claimed: boolean
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          reward_claimed?: boolean
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          reward_claimed?: boolean
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

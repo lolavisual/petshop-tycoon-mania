@@ -4,9 +4,10 @@ import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
 import { useTelegramTheme } from '@/hooks/useTelegramTheme';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
-import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
+import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
+import AchievementsPage from '@/components/AchievementsPage';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import FloatingParticles from '@/components/game/FloatingParticles';
 // Компонент питомца с шапкой Санты
@@ -128,9 +129,9 @@ const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: numbe
 const NavBar = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) => {
   const tabs = [
     { id: 'game', icon: Sparkles, label: 'Игра' },
+    { id: 'achievements', icon: Trophy, label: 'Награды' },
     { id: 'shop', icon: ShoppingBag, label: 'Магазин' },
     { id: 'profile', icon: User, label: 'Профиль' },
-    { id: 'articles', icon: FileText, label: 'Статьи' },
   ];
 
   return (
@@ -377,9 +378,9 @@ const Index = () => {
       <main className="relative z-10">
         <AnimatePresence mode="wait">
           {activeTab === 'game' && <GamePage key="game" />}
+          {activeTab === 'achievements' && <AchievementsPage key="achievements" />}
           {activeTab === 'shop' && <ShopPage key="shop" />}
           {activeTab === 'profile' && <ProfilePage key="profile" />}
-          {activeTab === 'articles' && <ArticlesPage key="articles" />}
         </AnimatePresence>
       </main>
 
