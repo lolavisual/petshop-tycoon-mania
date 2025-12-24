@@ -63,6 +63,28 @@ interface PassiveResult {
   hadPenalty: boolean;
 }
 
+// Мок-профиль для режима разработки
+const DEV_MOCK_PROFILE: GameProfile = {
+  id: 'dev-user',
+  telegram_id: 123456789,
+  username: 'dev_user',
+  first_name: 'Разработчик',
+  last_name: null,
+  avatar_variant: 0,
+  level: 5,
+  xp: 50,
+  crystals: 1000,
+  diamonds: 100,
+  stones: 50,
+  passive_rate: 1,
+  last_passive_claim: new Date().toISOString(),
+  last_chest_claim: null,
+  streak_days: 3,
+  last_streak_date: null,
+  last_active_at: new Date().toISOString(),
+  is_banned: false
+};
+
 export function useGameState() {
   const [profile, setProfile] = useState<GameProfile | null>(null);
   const [accessories, setAccessories] = useState<UserAccessory[]>([]);
@@ -70,11 +92,30 @@ export function useGameState() {
   const [error, setError] = useState<string | null>(null);
   const [isClicking, setIsClicking] = useState(false);
 
+  // Проверяем, работаем ли мы в Telegram
+  const isTelegram = typeof window !== 'undefined' && 
+    (window as any).Telegram?.WebApp?.initData?.length > 0;
+
   // Загрузка профиля
   const loadProfile = useCallback(async () => {
     try {
+      // В DEV режиме без Telegram используем мок-данные
+      if (import.meta.env.DEV && !isTelegram) {
+        console.log('DEV режим: используем мок-профиль');
+        setProfile(DEV_MOCK_PROFILE);
+        setAccessories([]);
+        setLoading(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        // В DEV режиме всё равно показываем мок
+        if (import.meta.env.DEV) {
+          setProfile(DEV_MOCK_PROFILE);
+          setLoading(false);
+          return;
+        }
         setError('Пользователь не авторизован');
         setLoading(false);
         return;
@@ -88,6 +129,12 @@ export function useGameState() {
 
       if (profileError) {
         console.error('Ошибка загрузки профиля:', profileError);
+        // В DEV режиме используем мок при ошибке
+        if (import.meta.env.DEV) {
+          setProfile(DEV_MOCK_PROFILE);
+          setLoading(false);
+          return;
+        }
         setError('Не удалось загрузить профиль');
         return;
       }
@@ -120,11 +167,17 @@ export function useGameState() {
       }
     } catch (err) {
       console.error('Ошибка:', err);
+      // В DEV режиме используем мок при любой ошибке
+      if (import.meta.env.DEV) {
+        setProfile(DEV_MOCK_PROFILE);
+        setLoading(false);
+        return;
+      }
       setError('Произошла ошибка');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isTelegram]);
 
   // Клик
   const handleClick = useCallback(async (): Promise<ClickResult | null> => {
@@ -132,6 +185,45 @@ export function useGameState() {
     
     setIsClicking(true);
     hapticImpact('medium');
+
+    // В DEV режиме без Telegram - локальный мок клика
+    if (import.meta.env.DEV && !isTelegram) {
+      const xpEarned = 0.5;
+      const crystalsEarned = 1;
+      
+      setProfile(prev => {
+        if (!prev) return null;
+        const newXp = prev.xp + xpEarned;
+        const xpForNext = Math.floor(150 * Math.pow(1.4, prev.level - 1));
+        let newLevel = prev.level;
+        let finalXp = newXp;
+        
+        if (newXp >= xpForNext) {
+          newLevel++;
+          finalXp = newXp - xpForNext;
+          toast.success(`🎉 Уровень ${newLevel}!`);
+        }
+        
+        return {
+          ...prev,
+          crystals: prev.crystals + crystalsEarned,
+          xp: finalXp,
+          level: newLevel
+        };
+      });
+      
+      setIsClicking(false);
+      return {
+        crystals: profile?.crystals || 0,
+        xp: profile?.xp || 0,
+        level: profile?.level || 1,
+        xpForNext: 150,
+        crystalsEarned,
+        xpEarned,
+        leveledUp: false,
+        newAccessory: null
+      };
+    }
 
     try {
       const { data, error } = await supabase.functions.invoke('game-click', {
@@ -178,7 +270,7 @@ export function useGameState() {
     } finally {
       setIsClicking(false);
     }
-  }, [isClicking]);
+  }, [isClicking, isTelegram, profile]);
 
   // Сундук
   const claimChest = useCallback(async (): Promise<ChestResult | null> => {
