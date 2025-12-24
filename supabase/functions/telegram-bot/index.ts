@@ -5,6 +5,7 @@ const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const ADMIN_TELEGRAM_ID = Deno.env.get('ADMIN_TELEGRAM_ID');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -415,10 +416,13 @@ serve(async (req) => {
     if (isOrderMessage) {
       console.log(`Order received from ${userName}: ${text}`);
       
-      // Extract product name from order
+      // Extract product name and price from order
       const productMatch = text.match(/📦\s*(.+?)(?:\n|$)/);
+      const priceMatch = text.match(/💰\s*(.+?)(?:\n|$)/);
       const productName = productMatch ? productMatch[1].trim() : 'товар';
+      const price = priceMatch ? priceMatch[1].trim() : 'не указана';
       
+      // Send confirmation to customer
       const orderConfirmation = `✅ <b>Спасибо за заказ, ${userName}!</b>
 
 Мы получили вашу заявку на:
@@ -435,6 +439,34 @@ serve(async (req) => {
       };
 
       await sendTelegramMessage(chatId, orderConfirmation, keyboard);
+
+      // Notify manager about new order
+      if (ADMIN_TELEGRAM_ID) {
+        const customerLink = username ? `@${username}` : `<a href="tg://user?id=${telegramId}">${userName}</a>`;
+        const managerNotification = `🛒 <b>НОВЫЙ ЗАКАЗ!</b>
+
+👤 <b>Клиент:</b> ${customerLink}
+📱 <b>Telegram ID:</b> <code>${telegramId}</code>
+
+📦 <b>Товар:</b> ${productName}
+💰 <b>Цена:</b> ${price}
+
+⏰ <i>Свяжитесь с клиентом в течение 15 минут!</i>`;
+
+        const managerKeyboard = {
+          inline_keyboard: [
+            [{ text: '💬 Написать клиенту', url: `tg://user?id=${telegramId}` }]
+          ]
+        };
+
+        try {
+          await sendTelegramMessage(parseInt(ADMIN_TELEGRAM_ID), managerNotification, managerKeyboard);
+          console.log(`Manager notified about order from ${telegramId}`);
+        } catch (err) {
+          console.error('Failed to notify manager:', err);
+        }
+      }
+
       return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
