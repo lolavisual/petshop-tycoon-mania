@@ -256,6 +256,68 @@ export type Database = {
           },
         ]
       }
+      orders: {
+        Row: {
+          chat_id: number
+          confirmed_at: string | null
+          created_at: string
+          customer_name: string
+          customer_username: string | null
+          delivered_at: string | null
+          id: string
+          manager_notes: string | null
+          price: string
+          product_id: string | null
+          product_name: string
+          shipped_at: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          telegram_id: number
+          updated_at: string
+        }
+        Insert: {
+          chat_id: number
+          confirmed_at?: string | null
+          created_at?: string
+          customer_name: string
+          customer_username?: string | null
+          delivered_at?: string | null
+          id?: string
+          manager_notes?: string | null
+          price: string
+          product_id?: string | null
+          product_name: string
+          shipped_at?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          telegram_id: number
+          updated_at?: string
+        }
+        Update: {
+          chat_id?: number
+          confirmed_at?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_username?: string | null
+          delivered_at?: string | null
+          id?: string
+          manager_notes?: string | null
+          price?: string
+          product_id?: string | null
+          product_name?: string
+          shipped_at?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          telegram_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pet_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pet_products: {
         Row: {
           category: string
@@ -588,7 +650,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      order_status:
+        | "new"
+        | "processing"
+        | "confirmed"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -715,6 +783,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      order_status: [
+        "new",
+        "processing",
+        "confirmed",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+    },
   },
 } as const
