@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { initTelegramWebApp, isTelegramWebApp, hapticImpact } from '@/lib/telegram';
+import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
-import { Gem, Sparkles, Gift, User, ShoppingBag, FileText, Crown } from 'lucide-react';
+import { Sparkles, Gift, User, ShoppingBag, FileText, Crown } from 'lucide-react';
+import ShopPage from '@/components/ShopPage';
 
 // Компонент питомца
 const PetAvatar = ({ level, avatarVariant, hasSantaHat }: { level: number; avatarVariant: number; hasSantaHat: boolean }) => {
@@ -221,15 +222,7 @@ const GamePage = () => {
   );
 };
 
-// Заглушки для других страниц
-const ShopPage = () => (
-  <div className="p-4">
-    <h1 className="text-2xl font-bold mb-4">🛒 Магазин</h1>
-    <div className="glass-card p-6 text-center text-muted-foreground">
-      Скоро здесь появятся товары!
-    </div>
-  </div>
-);
+// Страница профиля
 
 const ProfilePage = () => {
   const { profile } = useGameState();
