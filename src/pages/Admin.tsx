@@ -4,13 +4,14 @@ import { useAdmin, AdminStats, AdminUser, AdminArticle } from '@/hooks/useAdmin'
 import { 
   Shield, Users, FileText, BarChart3, Send, Ban, 
   CheckCircle, XCircle, Search, ChevronLeft, ChevronRight,
-  Gift, Loader2, Eye, AlertTriangle
+  Gift, Loader2, Eye, AlertTriangle, Package
 } from 'lucide-react';
+import ProductsAdminTab from '@/components/ProductsAdminTab';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-type TabType = 'stats' | 'users' | 'articles' | 'broadcast';
+type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products';
 
 const AdminPage = () => {
   const [adminSecret, setAdminSecret] = useState('');
@@ -235,6 +236,7 @@ const AdminPage = () => {
           { id: 'users', icon: Users, label: 'Пользователи' },
           { id: 'articles', icon: FileText, label: 'Статьи' },
           { id: 'broadcast', icon: Send, label: 'Рассылка' },
+          { id: 'products', icon: Package, label: 'Товары' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -532,6 +534,11 @@ const AdminPage = () => {
                 </Button>
               </div>
             </motion.div>
+          )}
+
+          {/* Товары */}
+          {activeTab === 'products' && (
+            <ProductsAdminTab adminSecret={adminSecret} />
           )}
         </AnimatePresence>
       </div>

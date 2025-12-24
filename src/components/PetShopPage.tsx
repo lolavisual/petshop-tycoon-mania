@@ -105,13 +105,25 @@ const PetShopPage = () => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
-                className="glass-card p-3 rounded-2xl flex flex-col"
+                className="glass-card rounded-2xl flex flex-col overflow-hidden"
               >
-                {/* Иконка товара */}
-                <div className="text-4xl text-center mb-2">
-                  {product.icon}
-                </div>
+                {/* Изображение или иконка товара */}
+                {product.image_url ? (
+                  <div className="aspect-square w-full overflow-hidden bg-muted">
+                    <img 
+                      src={product.image_url} 
+                      alt={product.name_ru}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-square w-full flex items-center justify-center bg-muted/50 text-5xl">
+                    {product.icon}
+                  </div>
+                )}
 
+                <div className="p-3 flex flex-col flex-1">
                 {/* Название */}
                 <h3 className="font-bold text-sm text-foreground line-clamp-2 min-h-[2.5rem]">
                   {product.name_ru}
@@ -141,6 +153,7 @@ const PetShopPage = () => {
                   <Send className="w-3 h-3" />
                   Заказать
                 </motion.button>
+                </div>
               </motion.div>
             ))
           )}
