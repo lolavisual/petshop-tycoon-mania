@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePetProducts, CategoryType, categoryLabels, isNewProduct, isHitProduct } from '@/hooks/usePetProducts';
+import { usePromotions } from '@/hooks/usePromotions';
+import PromotionsBanner from './PromotionsBanner';
 import { hapticImpact } from '@/lib/telegram';
-import { ShoppingCart, Send, RefreshCw, Heart, Sparkles, Flame, Package, PackageX } from 'lucide-react';
+import { ShoppingCart, Send, RefreshCw, Heart, Sparkles, Flame, Package, PackageX, Percent } from 'lucide-react';
 
 // Локальное хранилище избранного
 const FAVORITES_KEY = 'petshop_favorites';
@@ -30,6 +32,8 @@ const PetShopPage = () => {
     openTelegramOrder,
     refresh,
   } = usePetProducts();
+
+  const { promotions, getProductDiscount, getProductPromo } = usePromotions();
 
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -103,6 +107,11 @@ const PetShopPage = () => {
         </p>
       </div>
 
+      {/* Активные акции */}
+      {promotions.length > 0 && (
+        <PromotionsBanner promotions={promotions} />
+      )}
+
       {/* Фильтр избранного */}
       {favorites.length > 0 && (
         <motion.button
@@ -166,6 +175,8 @@ const PetShopPage = () => {
               const isNew = isNewProduct(product.created_at);
               const isHit = isHitProduct(product);
               const isFav = isFavorite(product.id);
+              const discount = getProductDiscount(product.id);
+              const promo = getProductPromo(product.id);
 
               return (
                 <motion.div
@@ -175,11 +186,21 @@ const PetShopPage = () => {
                   transition={{ delay: index * 0.05 }}
                   className={`glass-card rounded-2xl flex flex-col overflow-hidden relative ${
                     !product.in_stock ? 'opacity-70' : ''
-                  }`}
+                  } ${promo ? 'ring-2 ring-primary/50' : ''}`}
                 >
                   {/* Бейджи */}
                   <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
-                    {isNew && (
+                    {discount && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-rose-500 to-pink-500 text-white flex items-center gap-1 shadow-md"
+                      >
+                        <Percent className="w-3 h-3" />
+                        -{discount}%
+                      </motion.div>
+                    )}
+                    {isNew && !discount && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -189,7 +210,7 @@ const PetShopPage = () => {
                         Новинка
                       </motion.div>
                     )}
-                    {isHit && (
+                    {isHit && !discount && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
@@ -281,8 +302,21 @@ const PetShopPage = () => {
                     )}
 
                     {/* Цена */}
-                    <div className="mt-2 text-lg font-bold text-primary">
-                      {formatPrice(product.price)}
+                    <div className="mt-2">
+                      {discount ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-primary">
+                            {formatPrice(Math.round(product.price * (1 - discount / 100)))}
+                          </span>
+                          <span className="text-xs text-muted-foreground line-through">
+                            {formatPrice(product.price)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-lg font-bold text-primary">
+                          {formatPrice(product.price)}
+                        </span>
+                      )}
                     </div>
 
                     {/* Кнопка заказа */}
