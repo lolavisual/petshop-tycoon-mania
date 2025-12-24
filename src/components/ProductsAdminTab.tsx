@@ -25,6 +25,7 @@ const emptyProduct: Omit<PetProduct, 'id'> = {
   image_url: null,
   icon: '🐾',
   in_stock: true,
+  created_at: new Date().toISOString(),
 };
 
 const ProductsAdminTab = ({ adminSecret }: ProductsAdminTabProps) => {
