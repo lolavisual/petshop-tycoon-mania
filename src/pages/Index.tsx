@@ -38,19 +38,26 @@ const PetAvatar = ({ level, avatarVariant, hasSantaHat }: { level: number; avata
 
 // Компонент тап-зоны
 const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: number; x: number; y: number }[] }) => {
+  const handleTap = () => {
+    hapticImpact('medium');
+    onTap();
+  };
+
   return (
-    <motion.div
-      className="tap-zone relative w-48 h-48 rounded-full flex items-center justify-center"
+    <motion.button
+      type="button"
+      className="tap-zone relative w-48 h-48 rounded-full flex items-center justify-center cursor-pointer touch-manipulation"
       style={{
         background: 'radial-gradient(circle, hsl(var(--primary) / 0.2) 0%, transparent 70%)'
       }}
       whileTap={{ scale: 0.95 }}
-      onTap={() => {
-        hapticImpact('medium');
-        onTap();
+      onClick={handleTap}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        handleTap();
       }}
     >
-      <div className="absolute inset-0 rounded-full border-4 border-dashed border-primary/30 animate-spin" style={{ animationDuration: '20s' }} />
+      <div className="absolute inset-0 rounded-full border-4 border-dashed border-primary/30 animate-spin pointer-events-none" style={{ animationDuration: '20s' }} />
       
       <AnimatePresence>
         {crystals.map(crystal => (
@@ -68,8 +75,8 @@ const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: numbe
         ))}
       </AnimatePresence>
       
-      <span className="text-lg font-bold text-primary">Тапай!</span>
-    </motion.div>
+      <span className="text-lg font-bold text-primary pointer-events-none">Тапай!</span>
+    </motion.button>
   );
 };
 
@@ -83,15 +90,15 @@ const NavBar = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: 
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 glass-card rounded-t-3xl px-4 py-3 safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 glass-card rounded-t-3xl px-4 py-3 safe-area-inset-bottom z-50">
       <div className="flex justify-around items-center">
         {tabs.map(tab => (
-          <motion.button
+          <button
             key={tab.id}
-            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${
+            type="button"
+            className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors active:scale-95 touch-manipulation ${
               activeTab === tab.id ? 'text-primary' : 'text-muted-foreground'
             }`}
-            whileTap={{ scale: 0.9 }}
             onClick={() => {
               hapticImpact('light');
               setActiveTab(tab.id);
@@ -105,7 +112,7 @@ const NavBar = ({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: 
                 layoutId="navIndicator"
               />
             )}
-          </motion.button>
+          </button>
         ))}
       </div>
     </nav>
@@ -203,9 +210,9 @@ const GamePage = () => {
         <TapZone onTap={onTap} crystals={floatingCrystals} />
       </div>
       
-      <motion.button
-        className={`w-full btn-gradient-accent py-4 rounded-2xl flex items-center justify-center gap-3 ${!canClaimChest() ? 'opacity-50' : ''}`}
-        whileTap={canClaimChest() ? { scale: 0.98 } : {}}
+      <button
+        type="button"
+        className={`w-full btn-gradient-accent py-4 rounded-2xl flex items-center justify-center gap-3 touch-manipulation active:scale-[0.98] transition-transform ${!canClaimChest() ? 'opacity-50' : ''}`}
         onClick={() => canClaimChest() && claimChest()}
         disabled={!canClaimChest()}
       >
@@ -213,7 +220,7 @@ const GamePage = () => {
         <span className="font-bold">
           {canClaimChest() ? 'Открыть сундук!' : `Сундук через ${timeUntilChest()}`}
         </span>
-      </motion.button>
+      </button>
       
       {profile.streak_days > 0 && (
         <div className="text-center text-sm text-muted-foreground">
