@@ -132,9 +132,23 @@ export function initTelegramWebApp() {
     webApp.expand();
     webApp.enableClosingConfirmation();
     
-    // Устанавливаем цвета темы
-    webApp.setHeaderColor('#FFF5EB');
-    webApp.setBackgroundColor('#FFF5EB');
+    // Устанавливаем цвета темы в зависимости от темы Telegram
+    const isDark = webApp.colorScheme === 'dark';
+    const headerColor = isDark ? '#1a1a2e' : '#FFF5EB';
+    const bgColor = isDark ? '#16213e' : '#FFF5EB';
+    
+    webApp.setHeaderColor(headerColor);
+    webApp.setBackgroundColor(bgColor);
+    
+    // Скрываем кнопку "Назад" по умолчанию
+    webApp.BackButton.hide();
+    
+    console.log('Telegram WebApp initialized:', {
+      version: webApp.version,
+      platform: webApp.platform,
+      colorScheme: webApp.colorScheme,
+      viewportHeight: webApp.viewportHeight
+    });
   }
 }
 
