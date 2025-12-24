@@ -422,11 +422,39 @@ serve(async (req) => {
       const productName = productMatch ? productMatch[1].trim() : 'товар';
       const price = priceMatch ? priceMatch[1].trim() : 'не указана';
       
+      // Save order to database
+      let orderId = null;
+      try {
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .insert({
+            telegram_id: telegramId,
+            chat_id: chatId,
+            customer_name: userName,
+            customer_username: username,
+            product_name: productName,
+            price: price,
+            status: 'new',
+          })
+          .select('id')
+          .single();
+
+        if (orderError) {
+          console.error('Failed to save order:', orderError);
+        } else {
+          orderId = orderData?.id;
+          console.log(`Order saved with ID: ${orderId}`);
+        }
+      } catch (err) {
+        console.error('Error saving order:', err);
+      }
+
       // Send confirmation to customer
       const orderConfirmation = `✅ <b>Спасибо за заказ, ${userName}!</b>
 
 Мы получили вашу заявку на:
 📦 <b>${productName}</b>
+${orderId ? `\n🔢 <b>Номер заказа:</b> <code>${orderId.slice(0, 8)}</code>` : ''}
 
 ⏰ <b>Наш менеджер свяжется с вами в течение 15 минут</b> для уточнения деталей и подтверждения заказа.
 
@@ -444,6 +472,7 @@ serve(async (req) => {
       if (ADMIN_TELEGRAM_ID) {
         const customerLink = username ? `@${username}` : `<a href="tg://user?id=${telegramId}">${userName}</a>`;
         const managerNotification = `🛒 <b>НОВЫЙ ЗАКАЗ!</b>
+${orderId ? `\n🔢 <b>ID:</b> <code>${orderId.slice(0, 8)}</code>` : ''}
 
 👤 <b>Клиент:</b> ${customerLink}
 📱 <b>Telegram ID:</b> <code>${telegramId}</code>
@@ -455,7 +484,8 @@ serve(async (req) => {
 
         const managerKeyboard = {
           inline_keyboard: [
-            [{ text: '💬 Написать клиенту', url: `tg://user?id=${telegramId}` }]
+            [{ text: '💬 Написать клиенту', url: `tg://user?id=${telegramId}` }],
+            [{ text: '📋 Открыть заказы', url: 'https://jtyqkppcieujjycqlkco.lovableproject.com/admin' }]
           ]
         };
 
