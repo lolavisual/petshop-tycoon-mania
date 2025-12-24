@@ -87,6 +87,93 @@ export const useProductAdmin = (adminSecret: string) => {
     }
   };
 
+  const downloadImageFromUrl = async (url: string, productId: string): Promise<string | null> => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      
+      const blob = await response.blob();
+      const ext = url.split('.').pop()?.split('?')[0] || 'jpg';
+      const fileName = `${productId}-${Date.now()}.${ext}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, blob, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+
+      return data.publicUrl;
+    } catch (err) {
+      console.error('Error downloading image from URL:', err);
+      return null;
+    }
+  };
+
+  const bulkUpsertProducts = async (
+    products: Omit<PetProduct, 'id'>[],
+    options: { updateExisting: boolean; importImages: boolean } = { updateExisting: false, importImages: false }
+  ) => {
+    try {
+      const results = { created: 0, updated: 0, errors: 0 };
+      
+      for (const product of products) {
+        // Check if product exists by name
+        const { data: existing } = await supabase
+          .from('pet_products')
+          .select('id, image_url')
+          .eq('name_ru', product.name_ru)
+          .maybeSingle();
+
+        let imageUrl = product.image_url;
+        
+        // Download and upload image if URL provided
+        if (options.importImages && product.image_url && product.image_url.startsWith('http')) {
+          const productId = existing?.id || crypto.randomUUID();
+          const uploadedUrl = await downloadImageFromUrl(product.image_url, productId);
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          }
+        }
+
+        if (existing && options.updateExisting) {
+          // Update existing product
+          const { error } = await supabase
+            .from('pet_products')
+            .update({ ...product, image_url: imageUrl || existing.image_url })
+            .eq('id', existing.id);
+          
+          if (error) {
+            results.errors++;
+          } else {
+            results.updated++;
+          }
+        } else if (!existing) {
+          // Create new product
+          const { error } = await supabase
+            .from('pet_products')
+            .insert({ ...product, image_url: imageUrl });
+          
+          if (error) {
+            results.errors++;
+          } else {
+            results.created++;
+          }
+        }
+      }
+      
+      await loadProducts();
+      return results;
+    } catch (err) {
+      console.error('Error bulk upserting products:', err);
+      toast.error('Ошибка импорта товаров');
+      return null;
+    }
+  };
+
   const bulkCreateProducts = async (products: Omit<PetProduct, 'id'>[]) => {
     try {
       const { data, error } = await supabase
@@ -138,6 +225,7 @@ export const useProductAdmin = (adminSecret: string) => {
     updateProduct,
     createProduct,
     bulkCreateProducts,
+    bulkUpsertProducts,
     deleteProduct,
   };
 };

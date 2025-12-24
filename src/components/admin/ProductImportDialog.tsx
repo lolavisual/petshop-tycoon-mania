@@ -23,10 +23,21 @@ interface ImportedProduct {
   image_url?: string;
 }
 
+interface ImportOptions {
+  updateExisting: boolean;
+  importImages: boolean;
+}
+
+interface ImportResults {
+  created: number;
+  updated: number;
+  errors: number;
+}
+
 interface ProductImportDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (products: ImportedProduct[]) => Promise<void>;
+  onImport: (products: ImportedProduct[], options: ImportOptions) => Promise<ImportResults | null>;
 }
 
 const ACCEPTED_FORMATS = '.csv,.xls,.xlsx,.yml,.yaml,.xml';
@@ -95,6 +106,8 @@ const ProductImportDialog = ({ isOpen, onClose, onImport }: ProductImportDialogP
   const [importing, setImporting] = useState(false);
   const [parsedProducts, setParsedProducts] = useState<ImportedProduct[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [updateExisting, setUpdateExisting] = useState(true);
+  const [importImages, setImportImages] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = () => {
@@ -277,8 +290,16 @@ const ProductImportDialog = ({ isOpen, onClose, onImport }: ProductImportDialogP
     
     setImporting(true);
     try {
-      await onImport(parsedProducts);
-      toast.success(`Импортировано ${parsedProducts.length} товаров`);
+      const results = await onImport(parsedProducts, { updateExisting, importImages });
+      if (results) {
+        const parts = [];
+        if (results.created > 0) parts.push(`создано: ${results.created}`);
+        if (results.updated > 0) parts.push(`обновлено: ${results.updated}`);
+        if (results.errors > 0) parts.push(`ошибок: ${results.errors}`);
+        toast.success(`Импорт завершён (${parts.join(', ')})`);
+      } else {
+        toast.success(`Импортировано ${parsedProducts.length} товаров`);
+      }
       handleClose();
     } catch (err) {
       console.error('Import error:', err);
@@ -424,6 +445,33 @@ const ProductImportDialog = ({ isOpen, onClose, onImport }: ProductImportDialogP
                     </p>
                   )}
                 </div>
+              </div>
+
+              {/* Import Options */}
+              <div className="space-y-2 border-t border-muted-foreground/10 pt-3">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={updateExisting}
+                    onChange={(e) => setUpdateExisting(e.target.checked)}
+                    className="w-4 h-4 rounded border-muted-foreground/30"
+                  />
+                  <span>Обновлять существующие товары (по названию)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={importImages}
+                    onChange={(e) => setImportImages(e.target.checked)}
+                    className="w-4 h-4 rounded border-muted-foreground/30"
+                  />
+                  <span>Загружать изображения по URL</span>
+                </label>
+                {importImages && (
+                  <p className="text-xs text-muted-foreground ml-6">
+                    Картинки из колонки image_url будут загружены в хранилище
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-2">
