@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useCallback } from 'react';
-import AnimatedPet from './AnimatedPet';
+import PexelsPet from './PexelsPet';
 import ClickEffects, { ClickEffect } from './ClickEffects';
 
 interface EnhancedTapZoneProps {
@@ -141,7 +141,7 @@ const EnhancedTapZone = ({ onTap, level, hasSantaHat = true }: EnhancedTapZonePr
         />
 
         {/* Питомец */}
-        <AnimatedPet 
+        <PexelsPet 
           isClicking={isClicking} 
           level={level} 
           hasSantaHat={hasSantaHat}
