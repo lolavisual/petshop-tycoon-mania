@@ -104,11 +104,28 @@ const LeaderboardPage = () => {
           {/* 2nd Place */}
           <div className="flex flex-col items-center">
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-4xl mb-2"
+              initial={{ y: 20, opacity: 0, scale: 0 }}
+              animate={{ 
+                y: [0, -8, 0], 
+                opacity: 1, 
+                scale: 1,
+                rotate: [0, -5, 5, 0]
+              }}
+              transition={{ 
+                y: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+                rotate: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
+                opacity: { duration: 0.5, delay: 0.2 },
+                scale: { duration: 0.5, delay: 0.2 }
+              }}
+              className="text-4xl mb-2 relative"
             >
+              <motion.span
+                className="absolute -top-2 -right-2 text-lg"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                ✨
+              </motion.span>
               {PETS[leaderboard[1].avatar_variant % PETS.length]}
             </motion.div>
             <div className="glass-card p-3 rounded-xl text-center border border-gray-400/30">
@@ -123,12 +140,47 @@ const LeaderboardPage = () => {
           {/* 1st Place */}
           <div className="flex flex-col items-center -mt-4">
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.15 }}
-              className="text-5xl mb-2"
+              initial={{ y: 20, opacity: 0, scale: 0 }}
+              animate={{ 
+                y: [0, -12, 0], 
+                opacity: 1, 
+                scale: [1, 1.1, 1],
+              }}
+              transition={{ 
+                y: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' },
+                scale: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' },
+                opacity: { duration: 0.5, delay: 0.15 }
+              }}
+              className="text-5xl mb-2 relative"
             >
-              {PETS[leaderboard[0].avatar_variant % PETS.length]}
+              {/* Glow effect */}
+              <motion.div
+                className="absolute inset-0 bg-yellow-400/30 rounded-full blur-xl"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <motion.span
+                className="absolute -top-3 left-1/2 -translate-x-1/2 text-xl"
+                animate={{ y: [0, -5, 0], rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                👑
+              </motion.span>
+              <motion.span
+                className="absolute -top-1 -left-3 text-lg"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+              >
+                ⭐
+              </motion.span>
+              <motion.span
+                className="absolute -top-1 -right-3 text-lg"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: 0.3 }}
+              >
+                ⭐
+              </motion.span>
+              <span className="relative z-10">{PETS[leaderboard[0].avatar_variant % PETS.length]}</span>
             </motion.div>
             <div className="glass-card-premium p-4 rounded-xl text-center border-2 border-yellow-500/30 relative">
               <motion.div
@@ -152,11 +204,28 @@ const LeaderboardPage = () => {
           {/* 3rd Place */}
           <div className="flex flex-col items-center">
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.25 }}
-              className="text-4xl mb-2"
+              initial={{ y: 20, opacity: 0, scale: 0 }}
+              animate={{ 
+                y: [0, -6, 0], 
+                opacity: 1, 
+                scale: 1,
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                y: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' },
+                rotate: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' },
+                opacity: { duration: 0.5, delay: 0.25 },
+                scale: { duration: 0.5, delay: 0.25 }
+              }}
+              className="text-4xl mb-2 relative"
             >
+              <motion.span
+                className="absolute -top-2 -left-2 text-lg"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.8, repeat: Infinity }}
+              >
+                🌟
+              </motion.span>
               {PETS[leaderboard[2].avatar_variant % PETS.length]}
             </motion.div>
             <div className="glass-card p-3 rounded-xl text-center border border-amber-600/30">
