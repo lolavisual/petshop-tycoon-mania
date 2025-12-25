@@ -2,3 +2,6 @@ project_id = "jtyqkppcieujjycqlkco"
 
 [functions.telegram-bot]
 verify_jwt = false
+
+[functions.quest-claim]
+verify_jwt = true
