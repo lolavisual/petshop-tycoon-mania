@@ -150,6 +150,9 @@ export const useDailyQuests = (userId?: string) => {
             uq.quest_date === today
     );
 
+    let questCompleted = false;
+    let completedQuestName = '';
+
     for (const userQuest of matchingUserQuests) {
       const newProgress = Number(userQuest.progress) + incrementBy;
       const isCompleted = newProgress >= userQuest.quest.requirement_value;
@@ -166,11 +169,25 @@ export const useDailyQuests = (userId?: string) => {
       if (error) {
         console.error('Error updating quest progress:', error);
       }
+
+      if (isCompleted && !userQuest.is_completed) {
+        questCompleted = true;
+        completedQuestName = userQuest.quest.name_ru;
+      }
+    }
+
+    // Show notification when quest is completed
+    if (questCompleted) {
+      toast({
+        title: "🎯 Квест выполнен!",
+        description: `«${completedQuestName}» завершён! Забери награду в разделе Квесты.`,
+        duration: 5000,
+      });
     }
 
     // Refresh quests
     await loadQuests();
-  }, [userId, userQuests, loadQuests]);
+  }, [userId, userQuests, loadQuests, toast]);
 
   useEffect(() => {
     loadQuests();

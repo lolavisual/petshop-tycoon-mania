@@ -4,11 +4,12 @@ import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
 import { useTelegramTheme } from '@/hooks/useTelegramTheme';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
-import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target } from 'lucide-react';
+import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3 } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
 import AchievementsPage from '@/components/AchievementsPage';
 import DailyQuestsPage from '@/components/DailyQuestsPage';
+import LeaderboardPage from '@/components/LeaderboardPage';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyQuests } from '@/hooks/useDailyQuests';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
@@ -133,7 +134,7 @@ const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements, unclaimedQuest
   const tabs = [
     { id: 'game', icon: Sparkles, label: 'Игра', badge: 0 },
     { id: 'quests', icon: Target, label: 'Квесты', badge: unclaimedQuests },
-    { id: 'achievements', icon: Trophy, label: 'Награды', badge: unclaimedAchievements },
+    { id: 'leaderboard', icon: BarChart3, label: 'Топ', badge: 0 },
     { id: 'shop', icon: ShoppingBag, label: 'Магазин', badge: 0 },
   ];
 
@@ -448,7 +449,7 @@ const Index = () => {
         <AnimatePresence mode="wait">
           {activeTab === 'game' && <GamePage key="game" onQuestProgress={updateQuestProgress} />}
           {activeTab === 'quests' && <DailyQuestsPage key="quests" userId={profile?.id} />}
-          {activeTab === 'achievements' && <AchievementsPage key="achievements" />}
+          {activeTab === 'leaderboard' && <LeaderboardPage key="leaderboard" />}
           {activeTab === 'shop' && <ShopPage key="shop" />}
         </AnimatePresence>
       </main>
