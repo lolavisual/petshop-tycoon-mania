@@ -1,8 +1,10 @@
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useDailyQuests } from '@/hooks/useDailyQuests';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Gift, Check, Clock, Sparkles, Gem, Zap } from 'lucide-react';
+import Confetti from '@/components/Confetti';
 
 interface DailyQuestsPageProps {
   userId?: string;
@@ -10,6 +12,16 @@ interface DailyQuestsPageProps {
 
 const DailyQuestsPage = ({ userId }: DailyQuestsPageProps) => {
   const { userQuests, loading, claiming, claimReward } = useDailyQuests(userId);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleClaimReward = useCallback(async (userQuestId: string) => {
+    try {
+      await claimReward(userQuestId);
+      setShowConfetti(true);
+    } catch (error) {
+      // Error handled in hook
+    }
+  }, [claimReward]);
 
   if (loading) {
     return (
@@ -28,6 +40,9 @@ const DailyQuestsPage = ({ userId }: DailyQuestsPageProps) => {
       animate={{ opacity: 1 }}
       className="p-4 pb-24 space-y-4"
     >
+      {/* Confetti */}
+      <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
+
       {/* Header */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -143,7 +158,7 @@ const DailyQuestsPage = ({ userId }: DailyQuestsPageProps) => {
                   ) : isClaimable ? (
                     <Button
                       size="sm"
-                      onClick={() => claimReward(userQuest.id)}
+                      onClick={() => handleClaimReward(userQuest.id)}
                       disabled={isClaiming}
                       className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
                     >

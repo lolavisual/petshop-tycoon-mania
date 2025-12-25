@@ -256,7 +256,7 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
 };
 
 // Главная страница игры
-const GamePage = () => {
+const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?: number) => void }) => {
   const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
   const { playTap, playCrystal, playChest } = useSoundEffects();
   const [floatingCrystals, setFloatingCrystals] = useState<{ id: number; x: number; y: number }[]>([]);
@@ -278,13 +278,24 @@ const GamePage = () => {
       setFloatingCrystals(prev => prev.filter(c => c.id !== id));
     }, 700);
     
-    await handleClick();
+    const result = await handleClick();
+    
+    // Update quest progress for clicks
+    onQuestProgress?.('clicks', 1);
+    
+    // Update quest progress for crystals earned
+    if (result?.crystalsEarned) {
+      onQuestProgress?.('crystals_earned', result.crystalsEarned);
+    }
   };
 
-  const handleChestClaim = () => {
+  const handleChestClaim = async () => {
     if (canClaimChest()) {
       playChest();
-      claimChest();
+      await claimChest();
+      
+      // Update quest progress for chest claim
+      onQuestProgress?.('chest_claim', 1);
     }
   };
 
@@ -435,7 +446,7 @@ const Index = () => {
 
       <main className="relative z-10">
         <AnimatePresence mode="wait">
-          {activeTab === 'game' && <GamePage key="game" />}
+          {activeTab === 'game' && <GamePage key="game" onQuestProgress={updateQuestProgress} />}
           {activeTab === 'quests' && <DailyQuestsPage key="quests" userId={profile?.id} />}
           {activeTab === 'achievements' && <AchievementsPage key="achievements" />}
           {activeTab === 'shop' && <ShopPage key="shop" />}
