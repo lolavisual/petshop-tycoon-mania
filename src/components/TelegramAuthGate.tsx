@@ -10,15 +10,18 @@ interface TelegramAuthGateProps {
 
 export const TelegramAuthGate = ({ children }: TelegramAuthGateProps) => {
   const { loading, error, isAuthenticated, isTelegram, retry } = useTelegramAuth();
-  const [showContent, setShowContent] = useState(false);
+  
+  // В DEV режиме или не в Telegram - показываем контент сразу
+  const isDev = import.meta.env.DEV;
+  const [showContent, setShowContent] = useState(isDev);
 
-  // В браузере (не в Telegram) показываем контент сразу после небольшой задержки
+  // В браузере (не в Telegram) показываем контент после небольшой задержки
   useEffect(() => {
-    if (!isTelegram) {
+    if (!isTelegram && !isDev) {
       const timer = setTimeout(() => setShowContent(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [isTelegram]);
+  }, [isTelegram, isDev]);
 
   // Загрузка
   if (loading && !showContent) {
