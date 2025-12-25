@@ -4,11 +4,13 @@ import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
 import { useTelegramTheme } from '@/hooks/useTelegramTheme';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
-import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy } from 'lucide-react';
+import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
 import AchievementsPage from '@/components/AchievementsPage';
+import DailyQuestsPage from '@/components/DailyQuestsPage';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useDailyQuests } from '@/hooks/useDailyQuests';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import FloatingParticles from '@/components/game/FloatingParticles';
 // Компонент питомца с шапкой Санты
@@ -127,12 +129,12 @@ const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: numbe
 };
 
 // Навигация - Enhanced
-const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements }: { activeTab: string; setActiveTab: (tab: string) => void; unclaimedAchievements: number }) => {
+const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements, unclaimedQuests }: { activeTab: string; setActiveTab: (tab: string) => void; unclaimedAchievements: number; unclaimedQuests: number }) => {
   const tabs = [
     { id: 'game', icon: Sparkles, label: 'Игра', badge: 0 },
+    { id: 'quests', icon: Target, label: 'Квесты', badge: unclaimedQuests },
     { id: 'achievements', icon: Trophy, label: 'Награды', badge: unclaimedAchievements },
     { id: 'shop', icon: ShoppingBag, label: 'Магазин', badge: 0 },
-    { id: 'profile', icon: User, label: 'Профиль', badge: 0 },
   ];
 
   return (
@@ -368,10 +370,11 @@ const ProfilePage = () => {
 // Главный компонент
 const Index = () => {
   const [activeTab, setActiveTab] = useState('game');
-  const { loading, error } = useGameState();
+  const { loading, error, profile } = useGameState();
   const { isDark, toggleTheme } = useTelegramTheme();
   const { isMuted, toggleMute } = useSoundEffects();
   const { unclaimedCount } = useAchievements();
+  const { unclaimedCount: unclaimedQuestsCount, updateQuestProgress } = useDailyQuests(profile?.id);
 
   useEffect(() => {
     initTelegramWebApp();
@@ -433,13 +436,13 @@ const Index = () => {
       <main className="relative z-10">
         <AnimatePresence mode="wait">
           {activeTab === 'game' && <GamePage key="game" />}
+          {activeTab === 'quests' && <DailyQuestsPage key="quests" userId={profile?.id} />}
           {activeTab === 'achievements' && <AchievementsPage key="achievements" />}
           {activeTab === 'shop' && <ShopPage key="shop" />}
-          {activeTab === 'profile' && <ProfilePage key="profile" />}
         </AnimatePresence>
       </main>
 
-      <NavBar activeTab={activeTab} setActiveTab={setActiveTab} unclaimedAchievements={unclaimedCount} />
+      <NavBar activeTab={activeTab} setActiveTab={setActiveTab} unclaimedAchievements={unclaimedCount} unclaimedQuests={unclaimedQuestsCount} />
     </div>
   );
 };

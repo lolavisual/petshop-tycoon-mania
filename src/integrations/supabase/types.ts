@@ -304,6 +304,54 @@ export type Database = {
           },
         ]
       }
+      daily_quests: {
+        Row: {
+          created_at: string
+          description: string | null
+          description_ru: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          name_ru: string
+          requirement_type: string
+          requirement_value: number
+          reward_crystals: number
+          reward_diamonds: number
+          reward_xp: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ru: string
+          requirement_type: string
+          requirement_value?: number
+          reward_crystals?: number
+          reward_diamonds?: number
+          reward_xp?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ru?: string
+          requirement_type?: string
+          requirement_value?: number
+          reward_crystals?: number
+          reward_diamonds?: number
+          reward_xp?: number
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           chat_id: number
@@ -686,6 +734,53 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_daily_quests: {
+        Row: {
+          claimed_at: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_completed: boolean
+          progress: number
+          quest_date: string
+          quest_id: string
+          reward_claimed: boolean
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          progress?: number
+          quest_date?: string
+          quest_id: string
+          reward_claimed?: boolean
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          progress?: number
+          quest_date?: string
+          quest_id?: string
+          reward_claimed?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_daily_quests_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "daily_quests"
             referencedColumns: ["id"]
           },
         ]
