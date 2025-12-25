@@ -115,6 +115,7 @@ const PetShopPage = () => {
       {/* Фильтр избранного */}
       {favorites.length > 0 && (
         <motion.button
+          type="button"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className={`w-full py-3 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 ${
@@ -136,6 +137,7 @@ const PetShopPage = () => {
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
         {categories.map((cat, index) => (
           <motion.button
+            type="button"
             key={cat}
             className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
             initial={{ opacity: 0, y: 10 }}
@@ -225,6 +227,7 @@ const PetShopPage = () => {
 
                   {/* Кнопка избранного */}
                   <motion.button
+                    type="button"
                     className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-md"
                     whileTap={{ scale: 0.8 }}
                     onClick={(e) => {
@@ -321,6 +324,7 @@ const PetShopPage = () => {
 
                     {/* Кнопка заказа */}
                     <motion.button
+                      type="button"
                       className={`mt-2 w-full py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-1 ${
                         product.in_stock 
                           ? 'btn-gradient-secondary' 
