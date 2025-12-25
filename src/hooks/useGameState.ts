@@ -22,6 +22,12 @@ export interface GameProfile {
   last_streak_date: string | null;
   last_active_at: string;
   is_banned: boolean;
+  created_at: string;
+  total_clicks?: number;
+  total_crystals_earned?: number;
+  friends_count?: number;
+  gifts_sent?: number;
+  gifts_received?: number;
 }
 
 export interface Accessory {
@@ -82,7 +88,8 @@ const DEV_MOCK_PROFILE: GameProfile = {
   streak_days: 3,
   last_streak_date: null,
   last_active_at: new Date().toISOString(),
-  is_banned: false
+  is_banned: false,
+  created_at: new Date().toISOString(),
 };
 
 export function useGameState() {
