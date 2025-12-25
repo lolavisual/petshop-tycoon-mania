@@ -135,8 +135,8 @@ const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: numbe
 const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements, unclaimedQuests, unclaimedGifts }: { activeTab: string; setActiveTab: (tab: string) => void; unclaimedAchievements: number; unclaimedQuests: number; unclaimedGifts: number }) => {
   const tabs = [
     { id: 'game', icon: Sparkles, label: 'Игра', badge: 0 },
+    { id: 'shop', icon: ShoppingBag, label: 'Магазин', badge: 0 },
     { id: 'quests', icon: Target, label: 'Квесты', badge: unclaimedQuests },
-    { id: 'achievements', icon: Trophy, label: 'Награды', badge: unclaimedAchievements },
     { id: 'leaderboard', icon: BarChart3, label: 'Топ', badge: 0 },
     { id: 'profile', icon: User, label: 'Профиль', badge: unclaimedGifts },
   ];
@@ -432,8 +432,8 @@ const Index = () => {
       <main className="relative z-10">
         <AnimatePresence mode="wait">
           {activeTab === 'game' && <GamePage key="game" onQuestProgress={updateQuestProgress} />}
+          {activeTab === 'shop' && <ShopPage key="shop" />}
           {activeTab === 'quests' && <DailyQuestsPage key="quests" userId={profile?.id} />}
-          {activeTab === 'achievements' && <AchievementsPage key="achievements" />}
           {activeTab === 'leaderboard' && <LeaderboardPage key="leaderboard" />}
           {activeTab === 'profile' && <ProfilePage key="profile" />}
         </AnimatePresence>
