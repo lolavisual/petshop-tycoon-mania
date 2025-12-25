@@ -352,6 +352,69 @@ export type Database = {
         }
         Relationships: []
       }
+      friendships: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          friend_id: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          friend_id: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          friend_id?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gifts: {
+        Row: {
+          amount: number
+          claimed_at: string | null
+          created_at: string
+          from_user_id: string
+          gift_type: string
+          id: string
+          is_claimed: boolean
+          message: string | null
+          to_user_id: string
+        }
+        Insert: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          from_user_id: string
+          gift_type?: string
+          id?: string
+          is_claimed?: boolean
+          message?: string | null
+          to_user_id: string
+        }
+        Update: {
+          amount?: number
+          claimed_at?: string | null
+          created_at?: string
+          from_user_id?: string
+          gift_type?: string
+          id?: string
+          is_claimed?: boolean
+          message?: string | null
+          to_user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           chat_id: number
@@ -466,6 +529,9 @@ export type Database = {
           crystals: number
           diamonds: number
           first_name: string | null
+          friends_count: number
+          gifts_received: number
+          gifts_sent: number
           id: string
           is_banned: boolean
           last_active_at: string
@@ -478,6 +544,8 @@ export type Database = {
           stones: number
           streak_days: number
           telegram_id: number
+          total_clicks: number
+          total_crystals_earned: number
           updated_at: string
           username: string | null
           xp: number
@@ -488,6 +556,9 @@ export type Database = {
           crystals?: number
           diamonds?: number
           first_name?: string | null
+          friends_count?: number
+          gifts_received?: number
+          gifts_sent?: number
           id: string
           is_banned?: boolean
           last_active_at?: string
@@ -500,6 +571,8 @@ export type Database = {
           stones?: number
           streak_days?: number
           telegram_id: number
+          total_clicks?: number
+          total_crystals_earned?: number
           updated_at?: string
           username?: string | null
           xp?: number
@@ -510,6 +583,9 @@ export type Database = {
           crystals?: number
           diamonds?: number
           first_name?: string | null
+          friends_count?: number
+          gifts_received?: number
+          gifts_sent?: number
           id?: string
           is_banned?: boolean
           last_active_at?: string
@@ -522,6 +598,8 @@ export type Database = {
           stones?: number
           streak_days?: number
           telegram_id?: number
+          total_clicks?: number
+          total_crystals_earned?: number
           updated_at?: string
           username?: string | null
           xp?: number

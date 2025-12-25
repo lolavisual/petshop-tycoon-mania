@@ -10,8 +10,10 @@ import ArticlesPage from '@/components/ArticlesPage';
 import AchievementsPage from '@/components/AchievementsPage';
 import DailyQuestsPage from '@/components/DailyQuestsPage';
 import LeaderboardPage from '@/components/LeaderboardPage';
+import ProfilePage from '@/components/ProfilePage';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyQuests } from '@/hooks/useDailyQuests';
+import { useFriends } from '@/hooks/useFriends';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import FloatingParticles from '@/components/game/FloatingParticles';
 // Компонент питомца с шапкой Санты
@@ -130,13 +132,13 @@ const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: numbe
 };
 
 // Навигация - Enhanced
-const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements, unclaimedQuests }: { activeTab: string; setActiveTab: (tab: string) => void; unclaimedAchievements: number; unclaimedQuests: number }) => {
+const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements, unclaimedQuests, unclaimedGifts }: { activeTab: string; setActiveTab: (tab: string) => void; unclaimedAchievements: number; unclaimedQuests: number; unclaimedGifts: number }) => {
   const tabs = [
     { id: 'game', icon: Sparkles, label: 'Игра', badge: 0 },
     { id: 'quests', icon: Target, label: 'Квесты', badge: unclaimedQuests },
     { id: 'achievements', icon: Trophy, label: 'Награды', badge: unclaimedAchievements },
     { id: 'leaderboard', icon: BarChart3, label: 'Топ', badge: 0 },
-    { id: 'shop', icon: ShoppingBag, label: 'Магазин', badge: 0 },
+    { id: 'profile', icon: User, label: 'Профиль', badge: unclaimedGifts },
   ];
 
   return (
@@ -359,26 +361,6 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
   );
 };
 
-// Страница профиля
-
-const ProfilePage = () => {
-  const { profile } = useGameState();
-  
-  return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">👤 Профиль</h1>
-      {profile && (
-        <div className="glass-card p-4 space-y-3">
-          <p><strong>Имя:</strong> {profile.first_name || 'Игрок'}</p>
-          <p><strong>Уровень:</strong> {profile.level}</p>
-          <p><strong>Кристаллы:</strong> {Math.floor(profile.crystals)}</p>
-          <p><strong>Алмазы:</strong> {Math.floor(profile.diamonds)}</p>
-          <p><strong>Стрик:</strong> {profile.streak_days} дней</p>
-        </div>
-      )}
-    </div>
-  );
-};
 
 // Главный компонент
 const Index = () => {
@@ -388,6 +370,7 @@ const Index = () => {
   const { isMuted, toggleMute } = useSoundEffects();
   const { unclaimedCount } = useAchievements();
   const { unclaimedCount: unclaimedQuestsCount, updateQuestProgress } = useDailyQuests(profile?.id);
+  const { unclaimedGiftsCount } = useFriends(profile?.id);
 
   useEffect(() => {
     initTelegramWebApp();
@@ -452,11 +435,11 @@ const Index = () => {
           {activeTab === 'quests' && <DailyQuestsPage key="quests" userId={profile?.id} />}
           {activeTab === 'achievements' && <AchievementsPage key="achievements" />}
           {activeTab === 'leaderboard' && <LeaderboardPage key="leaderboard" />}
-          {activeTab === 'shop' && <ShopPage key="shop" />}
+          {activeTab === 'profile' && <ProfilePage key="profile" />}
         </AnimatePresence>
       </main>
 
-      <NavBar activeTab={activeTab} setActiveTab={setActiveTab} unclaimedAchievements={unclaimedCount} unclaimedQuests={unclaimedQuestsCount} />
+      <NavBar activeTab={activeTab} setActiveTab={setActiveTab} unclaimedAchievements={unclaimedCount} unclaimedQuests={unclaimedQuestsCount} unclaimedGifts={unclaimedGiftsCount} />
     </div>
   );
 };

@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.quest-claim]
 verify_jwt = true
+
+[functions.send-gift]
+verify_jwt = true
+
+[functions.claim-gift]
+verify_jwt = true
