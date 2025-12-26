@@ -19,7 +19,7 @@ const CUTE_DOG_QUERIES = [
   'french bulldog cute',
 ];
 
-const PexelsPet = ({ isClicking, level, hasSantaHat = true }: PexelsPetProps) => {
+const PexelsPet = ({ isClicking, level, hasSantaHat = false }: PexelsPetProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [happiness, setHappiness] = useState(0);
