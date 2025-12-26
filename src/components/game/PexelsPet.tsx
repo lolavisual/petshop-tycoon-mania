@@ -5,31 +5,33 @@ interface PexelsPetProps {
   isClicking: boolean;
   level: number;
   hasSantaHat?: boolean;
+  petType?: string;
 }
 
 const PEXELS_API_KEY = '563492ad6f91700001000001da3210bab5904864859f8c451833de3b';
 
-// Заранее подготовленные ID милых собак для надёжности
-const CUTE_DOG_QUERIES = [
-  'cute puppy face',
-  'happy dog portrait',
-  'golden retriever puppy',
-  'corgi smile',
-  'shiba inu',
-  'french bulldog cute',
-];
+// Запросы для разных типов питомцев
+const PET_QUERIES: Record<string, string[]> = {
+  dog: ['cute puppy face', 'happy dog portrait', 'golden retriever puppy', 'corgi smile', 'shiba inu', 'french bulldog cute'],
+  cat: ['cute kitten face', 'fluffy cat portrait', 'persian cat', 'tabby cat', 'maine coon kitten', 'british shorthair'],
+  hamster: ['cute hamster', 'fluffy hamster face', 'hamster eating', 'dwarf hamster', 'syrian hamster'],
+  rabbit: ['cute rabbit', 'bunny face', 'fluffy bunny', 'white rabbit', 'lop eared rabbit'],
+  parrot: ['colorful parrot', 'cute parakeet', 'bird portrait', 'budgie bird', 'cockatiel'],
+};
 
-const PexelsPet = ({ isClicking, level, hasSantaHat = false }: PexelsPetProps) => {
+const PexelsPet = ({ isClicking, level, hasSantaHat = false, petType = 'dog' }: PexelsPetProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [happiness, setHappiness] = useState(0);
   const [blinking, setBlinking] = useState(false);
 
-  // Загрузка случайного изображения собаки
+  // Загрузка изображения питомца при изменении типа
   useEffect(() => {
-    const fetchDogImage = async () => {
+    const fetchPetImage = async () => {
+      setLoading(true);
       try {
-        const query = CUTE_DOG_QUERIES[Math.floor(Math.random() * CUTE_DOG_QUERIES.length)];
+        const queries = PET_QUERIES[petType] || PET_QUERIES.dog;
+        const query = queries[Math.floor(Math.random() * queries.length)];
         const response = await fetch(
           `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=15&orientation=square`,
           {
@@ -47,7 +49,7 @@ const PexelsPet = ({ isClicking, level, hasSantaHat = false }: PexelsPetProps) =
           setImageUrl(randomPhoto.src.medium);
         }
       } catch (error) {
-        console.error('Error fetching dog image:', error);
+        console.error('Error fetching pet image:', error);
         // Fallback изображение
         setImageUrl('https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=400');
       } finally {
@@ -55,8 +57,8 @@ const PexelsPet = ({ isClicking, level, hasSantaHat = false }: PexelsPetProps) =
       }
     };
 
-    fetchDogImage();
-  }, []);
+    fetchPetImage();
+  }, [petType]);
 
   // Реакция на клики
   useEffect(() => {

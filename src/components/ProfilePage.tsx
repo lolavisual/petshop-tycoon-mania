@@ -8,14 +8,16 @@ import { Input } from '@/components/ui/input';
 import { 
   User, Crown, Sparkles, Gem, Zap, Calendar, Trophy, 
   Users, Gift, Send, Check, X, UserPlus, Heart, Star,
-  Clock, Target, Award
+  Clock, Target, Award, Palette
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import PetSelector, { getPetEmoji } from '@/components/game/PetSelector';
 
 const PETS = ['🐕', '🐈', '🐹', '🐰', '🦜'];
+const PET_TYPES = ['dog', 'cat', 'hamster', 'rabbit', 'parrot'];
 
 const ProfilePage = () => {
-  const { profile } = useGameState();
+  const { profile, refreshProfile } = useGameState();
   const { friends, pendingRequests, receivedGifts, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, sendGift, claimGift, loading } = useFriends(profile?.id);
   const { leaderboard } = useLeaderboard();
   const [activeSection, setActiveSection] = useState<'stats' | 'friends' | 'gifts'>('stats');
@@ -23,6 +25,7 @@ const ProfilePage = () => {
   const [giftAmount, setGiftAmount] = useState('10');
   const [giftType, setGiftType] = useState<'crystals' | 'diamonds'>('crystals');
   const [sendingGift, setSendingGift] = useState(false);
+  const [showPetSelector, setShowPetSelector] = useState(false);
 
   if (!profile) {
     return (
@@ -31,8 +34,7 @@ const ProfilePage = () => {
       </div>
     );
   }
-
-  const pet = PETS[profile.avatar_variant % PETS.length];
+  const pet = getPetEmoji(profile.pet_type || 'dog');
   const playerRank = leaderboard.findIndex(p => p.id === profile.id) + 1;
   const memberSince = new Date(profile.created_at).toLocaleDateString('ru-RU', { 
     year: 'numeric', 
@@ -107,8 +109,31 @@ const ProfilePage = () => {
             <Crown className="w-5 h-5 text-primary" />
             <span className="font-bold">Уровень {profile.level}</span>
           </div>
+          
+          {/* Change Pet Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => setShowPetSelector(true)}
+          >
+            <Palette className="w-4 h-4 mr-2" />
+            Сменить питомца
+          </Button>
         </div>
       </motion.div>
+
+      {/* Pet Selector Modal */}
+      <AnimatePresence>
+        {showPetSelector && (
+          <PetSelector
+            currentPetType={profile.pet_type || 'dog'}
+            userId={profile.id}
+            onClose={() => setShowPetSelector(false)}
+            onPetChanged={(petType) => refreshProfile?.()}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Section Tabs */}
       <div className="flex gap-2">

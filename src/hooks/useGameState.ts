@@ -28,6 +28,7 @@ export interface GameProfile {
   friends_count?: number;
   gifts_sent?: number;
   gifts_received?: number;
+  pet_type?: string;
 }
 
 export interface Accessory {
@@ -90,6 +91,7 @@ const DEV_MOCK_PROFILE: GameProfile = {
   last_active_at: new Date().toISOString(),
   is_banned: false,
   created_at: new Date().toISOString(),
+  pet_type: 'dog',
 };
 
 export function useGameState() {
