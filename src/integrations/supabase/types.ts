@@ -541,6 +541,7 @@ export type Database = {
           last_streak_date: string | null
           level: number
           passive_rate: number
+          pet_type: string
           stones: number
           streak_days: number
           telegram_id: number
@@ -568,6 +569,7 @@ export type Database = {
           last_streak_date?: string | null
           level?: number
           passive_rate?: number
+          pet_type?: string
           stones?: number
           streak_days?: number
           telegram_id: number
@@ -595,6 +597,7 @@ export type Database = {
           last_streak_date?: string | null
           level?: number
           passive_rate?: number
+          pet_type?: string
           stones?: number
           streak_days?: number
           telegram_id?: number
