@@ -522,6 +522,48 @@ export type Database = {
         }
         Relationships: []
       }
+      pet_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          description_ru: string | null
+          emoji: string
+          id: string
+          is_default: boolean
+          name: string
+          name_ru: string
+          price_crystals: number
+          price_diamonds: number
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          emoji: string
+          id?: string
+          is_default?: boolean
+          name: string
+          name_ru: string
+          price_crystals?: number
+          price_diamonds?: number
+          type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          emoji?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          name_ru?: string
+          price_crystals?: number
+          price_diamonds?: number
+          type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_variant: number
@@ -868,6 +910,35 @@ export type Database = {
             columns: ["quest_id"]
             isOneToOne: false
             referencedRelation: "daily_quests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_pets: {
+        Row: {
+          id: string
+          pet_type: string
+          purchased_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          pet_type: string
+          purchased_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          pet_type?: string
+          purchased_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_pets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

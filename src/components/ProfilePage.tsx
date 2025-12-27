@@ -129,8 +129,11 @@ const ProfilePage = () => {
           <PetSelector
             currentPetType={profile.pet_type || 'dog'}
             userId={profile.id}
+            userCrystals={profile.crystals}
+            userDiamonds={profile.diamonds}
             onClose={() => setShowPetSelector(false)}
-            onPetChanged={(petType) => refreshProfile?.()}
+            onPetChanged={() => refreshProfile?.()}
+            onCurrencySpent={() => refreshProfile?.()}
           />
         )}
       </AnimatePresence>
