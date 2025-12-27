@@ -1,11 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface PexelsPetProps {
   isClicking: boolean;
   level: number;
   hasSantaHat?: boolean;
   petType?: string;
+  onPetChangeComplete?: () => void;
 }
 
 const PEXELS_API_KEY = '563492ad6f91700001000001da3210bab5904864859f8c451833de3b';
@@ -19,16 +20,38 @@ const PET_QUERIES: Record<string, string[]> = {
   parrot: ['colorful parrot', 'cute parakeet', 'bird portrait', 'budgie bird', 'cockatiel'],
 };
 
-const PexelsPet = ({ isClicking, level, hasSantaHat = false, petType = 'dog' }: PexelsPetProps) => {
+const PET_EMOJIS: Record<string, string> = {
+  dog: '🐕',
+  cat: '🐈',
+  hamster: '🐹',
+  rabbit: '🐰',
+  parrot: '🦜',
+};
+
+const PexelsPet = ({ isClicking, level, hasSantaHat = false, petType = 'dog', onPetChangeComplete }: PexelsPetProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [happiness, setHappiness] = useState(0);
   const [blinking, setBlinking] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showParticles, setShowParticles] = useState(false);
+  const previousPetType = useRef(petType);
 
   // Загрузка изображения питомца при изменении типа
   useEffect(() => {
     const fetchPetImage = async () => {
+      // Check if pet type changed (not initial load)
+      const isChange = previousPetType.current !== petType && previousPetType.current !== undefined;
+      
+      if (isChange) {
+        setIsTransitioning(true);
+        setShowParticles(true);
+        setTimeout(() => setShowParticles(false), 1500);
+      }
+      
+      previousPetType.current = petType;
       setLoading(true);
+      
       try {
         const queries = PET_QUERIES[petType] || PET_QUERIES.dog;
         const query = queries[Math.floor(Math.random() * queries.length)];
@@ -54,11 +77,17 @@ const PexelsPet = ({ isClicking, level, hasSantaHat = false, petType = 'dog' }: 
         setImageUrl('https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=400');
       } finally {
         setLoading(false);
+        if (isTransitioning) {
+          setTimeout(() => {
+            setIsTransitioning(false);
+            onPetChangeComplete?.();
+          }, 500);
+        }
       }
     };
 
     fetchPetImage();
-  }, [petType]);
+  }, [petType, onPetChangeComplete]);
 
   // Реакция на клики
   useEffect(() => {
@@ -86,9 +115,54 @@ const PexelsPet = ({ isClicking, level, hasSantaHat = false, petType = 'dog' }: 
 
   return (
     <div className="relative w-48 h-48 flex items-center justify-center">
+      {/* Pet change particles */}
+      <AnimatePresence>
+        {showParticles && (
+          <>
+            {[...Array(16)].map((_, i) => (
+              <motion.div
+                key={`change-particle-${i}`}
+                className="absolute text-2xl pointer-events-none z-30"
+                style={{ left: '50%', top: '50%' }}
+                initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+                animate={{
+                  opacity: [1, 1, 0],
+                  scale: [0, 1.5, 1],
+                  x: Math.cos((i * 22.5 * Math.PI) / 180) * 100,
+                  y: Math.sin((i * 22.5 * Math.PI) / 180) * 100,
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.2, ease: 'easeOut', delay: i * 0.03 }}
+              >
+                {['✨', '⭐', '💫', '🌟', '❤️', '💕', '🎉', '🎊'][i % 8]}
+              </motion.div>
+            ))}
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Transition glow effect */}
+      <AnimatePresence>
+        {isTransitioning && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ 
+              opacity: [0, 0.8, 0],
+              scale: [0.5, 1.5, 2],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 rounded-full pointer-events-none z-20"
+            style={{
+              background: 'radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Аура счастья */}
       <AnimatePresence>
-        {happiness > 50 && (
+        {happiness > 50 && !isTransitioning && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ 
@@ -109,14 +183,14 @@ const PexelsPet = ({ isClicking, level, hasSantaHat = false, petType = 'dog' }: 
       <motion.div
         className="relative"
         animate={{
-          scale: isClicking ? [1, 1.15, 0.95, 1] : [1, 1.02, 1],
+          scale: isTransitioning ? [1, 0.8, 1.1, 1] : isClicking ? [1, 1.15, 0.95, 1] : [1, 1.02, 1],
           y: isClicking ? [0, -20, 0] : [0, -5, 0],
-          rotate: isClicking ? [-3, 3, -2, 0] : 0,
+          rotate: isTransitioning ? [0, 360] : isClicking ? [-3, 3, -2, 0] : 0,
         }}
         transition={{
-          duration: isClicking ? 0.35 : 2.5,
-          repeat: isClicking ? 0 : Infinity,
-          ease: isClicking ? 'easeOut' : 'easeInOut',
+          duration: isTransitioning ? 0.6 : isClicking ? 0.35 : 2.5,
+          repeat: isTransitioning ? 0 : isClicking ? 0 : Infinity,
+          ease: isTransitioning ? 'easeInOut' : isClicking ? 'easeOut' : 'easeInOut',
         }}
       >
         {/* Шапка Санты */}
@@ -137,17 +211,26 @@ const PexelsPet = ({ isClicking, level, hasSantaHat = false, petType = 'dog' }: 
           </motion.div>
         )}
 
-        {/* Фото собаки */}
+        {/* Фото питомца */}
         <div className="relative">
-          {loading ? (
-            <motion.div
-              className="w-36 h-36 rounded-full bg-muted flex items-center justify-center"
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 1, repeat: Infinity }}
-            >
-              <span className="text-4xl">🐕</span>
-            </motion.div>
-          ) : (
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="w-36 h-36 rounded-full bg-muted flex items-center justify-center"
+              >
+                <motion.span 
+                  className="text-4xl"
+                  animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                >
+                  {PET_EMOJIS[petType] || '🐕'}
+                </motion.span>
+              </motion.div>
+            ) : (
             <motion.div
               className="relative w-36 h-36 rounded-full overflow-hidden shadow-xl"
               style={{
@@ -181,9 +264,8 @@ const PexelsPet = ({ isClicking, level, hasSantaHat = false, petType = 'dog' }: 
               <div className="absolute top-4 left-4 w-6 h-6 rounded-full bg-white/30 blur-sm" />
               <div className="absolute top-6 left-8 w-3 h-3 rounded-full bg-white/40" />
             </motion.div>
-          )}
-
-          {/* Щёчки при счастье */}
+            )}
+          </AnimatePresence>
           <AnimatePresence>
             {happiness > 40 && !loading && (
               <>
