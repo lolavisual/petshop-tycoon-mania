@@ -73,6 +73,10 @@ export const useAchievements = () => {
         return profile.diamonds >= achievement.requirement_value;
       case 'streak':
         return profile.streak_days >= achievement.requirement_value;
+      case 'pet_changes':
+        return (profile.pet_changes || 0) >= achievement.requirement_value;
+      case 'quests_completed':
+        return (profile.quests_completed || 0) >= achievement.requirement_value;
       default:
         return false;
     }
@@ -141,7 +145,7 @@ export const useAchievements = () => {
         toast.success(`🏆 Достижение разблокировано: ${achievement.name_ru}!`);
       }
     });
-  }, [profile?.level, profile?.crystals, profile?.diamonds, profile?.streak_days, achievements, userAchievements]);
+  }, [profile?.level, profile?.crystals, profile?.diamonds, profile?.streak_days, profile?.pet_changes, profile?.quests_completed, achievements, userAchievements]);
 
   // Get achievement status
   const getAchievementStatus = useCallback((achievement: Achievement) => {
@@ -175,6 +179,12 @@ export const useAchievements = () => {
         break;
       case 'streak':
         current = profile.streak_days;
+        break;
+      case 'pet_changes':
+        current = profile.pet_changes || 0;
+        break;
+      case 'quests_completed':
+        current = profile.quests_completed || 0;
         break;
     }
 
