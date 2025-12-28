@@ -61,7 +61,19 @@ serve(async (req) => {
       )
     }
 
-    let item: any
+    type ShopItemMinimal = {
+      id: string;
+      name_ru: string;
+      required_level?: number;
+      price_crystals?: number;
+      price_diamonds?: number;
+      effect_type?: string | null;
+      effect_value?: number | null;
+      is_golden?: boolean;
+      discount_percent?: number;
+    };
+
+    let item: ShopItemMinimal | null = null
     let priceCrystals = 0
     let priceDiamonds = 0
     let effectType: string | null = null
@@ -177,7 +189,7 @@ serve(async (req) => {
     }
 
     // Списываем валюту и применяем эффект
-    const updates: Record<string, any> = {
+    const updates: Record<string, unknown> = {
       crystals: userCrystals - priceCrystals,
       diamonds: userDiamonds - priceDiamonds,
       last_active_at: new Date().toISOString()
@@ -225,7 +237,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        item: item.name_ru,
+        item: item?.name_ru || null,
         priceCrystals,
         priceDiamonds,
         newCrystals: updates.crystals,

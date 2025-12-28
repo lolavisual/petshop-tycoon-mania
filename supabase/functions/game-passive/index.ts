@@ -77,7 +77,7 @@ serve(async (req) => {
     // Вычисляем пассивный доход
     const passiveRate = Number(profile.passive_rate) // кристаллов в секунду
     const passiveSeconds = offlineHours * 60 * 60
-    let crystalsEarned = Math.floor(passiveRate * passiveSeconds)
+    const crystalsEarned = Math.floor(passiveRate * passiveSeconds)
 
     // Проверяем штраф за долгий оффлайн
     const daysSinceActive = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24)

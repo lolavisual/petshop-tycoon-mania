@@ -19,7 +19,14 @@ export const useSoundEffects = () => {
 
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const win = window as unknown as {
+        AudioContext?: typeof AudioContext;
+        webkitAudioContext?: typeof AudioContext;
+      };
+      const Ctor = win.AudioContext ?? win.webkitAudioContext;
+      // Fallback: if neither exists, this will throw when constructing
+      const CtorTyped = Ctor as unknown as new () => AudioContext;
+      audioContextRef.current = new CtorTyped();
     }
     return audioContextRef.current;
   }, []);

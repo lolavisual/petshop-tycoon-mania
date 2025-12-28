@@ -64,7 +64,8 @@ serve(async (req) => {
       )
     }
 
-    const accessory = userAccessory.accessories as any
+    type AccessoryMinimal = { id: string; name: string; name_ru: string; category: string };
+    const accessory = userAccessory.accessories as AccessoryMinimal;
     const shouldEquip = equip !== undefined ? equip : !userAccessory.is_equipped
 
     if (shouldEquip) {
@@ -80,8 +81,8 @@ serve(async (req) => {
 
       if (sameCategory) {
         for (const item of sameCategory) {
-          const itemAcc = item.accessories as any
-          if (itemAcc?.category === accessory.category) {
+          const itemAcc = item.accessories as AccessoryMinimal | undefined;
+          if (itemAcc && itemAcc.category === accessory.category) {
             await supabaseClient
               .from('user_accessories')
               .update({ is_equipped: false })

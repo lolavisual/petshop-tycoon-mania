@@ -7,7 +7,7 @@ const corsHeaders = {
 }
 
 // Проверка админа: Telegram ID + Secret Key + IP Whitelist
-async function validateAdmin(req: Request, supabaseAdmin: any): Promise<{ valid: boolean; error?: string }> {
+async function validateAdmin(req: Request, supabaseAdmin: ReturnType<typeof createClient>): Promise<{ valid: boolean; error?: string }> {
   try {
     const adminSecret = req.headers.get('x-admin-secret')
     
@@ -103,7 +103,8 @@ serve(async (req) => {
       )
     }
 
-    const { action, payload } = await req.json()
+    const body = await req.json() as { action?: string; payload?: unknown };
+    const { action, payload } = body;
     console.log('Admin action:', action, payload)
 
     switch (action) {
@@ -198,7 +199,7 @@ serve(async (req) => {
 
       // === ПОЛЬЗОВАТЕЛИ ===
       case 'get_users': {
-        const { page = 1, limit = 20, search = '' } = payload || {}
+        const { page = 1, limit = 20, search = '' } = (payload as { page?: number; limit?: number; search?: string } ) || {}
         const offset = (page - 1) * limit
 
         let query = supabaseAdmin
@@ -220,7 +221,7 @@ serve(async (req) => {
       }
 
       case 'update_user': {
-        const { userId, updates } = payload
+        const { userId, updates } = (payload as { userId?: string; updates?: Record<string, unknown> }) || {}
         
         if (!userId) {
           return new Response(
@@ -231,9 +232,9 @@ serve(async (req) => {
 
         // Разрешённые поля для обновления
         const allowedFields = ['level', 'xp', 'crystals', 'diamonds', 'stones', 'is_banned', 'passive_rate']
-        const safeUpdates: Record<string, any> = {}
+        const safeUpdates: Record<string, unknown> = {}
         
-        for (const [key, value] of Object.entries(updates)) {
+        for (const [key, value] of Object.entries(updates || {} as Record<string, unknown>)) {
           if (allowedFields.includes(key)) {
             safeUpdates[key] = value
           }

@@ -128,18 +128,18 @@ async function updateLastMessage(telegramId: number) {
   }
 }
 
-async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: any, imageUrl?: string) {
+async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: unknown, imageUrl?: string) {
   // If there's an image, send photo with caption
   if (imageUrl) {
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
-    const body: any = {
+    const body: Record<string, unknown> = {
       chat_id: chatId,
       photo: imageUrl,
       caption: text,
       parse_mode: 'HTML',
     };
     if (replyMarkup) {
-      body.reply_markup = replyMarkup;
+      (body as Record<string, unknown>)["reply_markup"] = replyMarkup;
     }
     const response = await fetch(url, {
       method: 'POST',
@@ -151,13 +151,13 @@ async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: a
 
   // Regular text message
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-  const body: any = {
+  const body: Record<string, unknown> = {
     chat_id: chatId,
     text,
     parse_mode: 'HTML',
   };
   if (replyMarkup) {
-    body.reply_markup = replyMarkup;
+    (body as Record<string, unknown>)["reply_markup"] = replyMarkup;
   }
   
   const response = await fetch(url, {
