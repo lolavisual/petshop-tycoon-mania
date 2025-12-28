@@ -145,7 +145,7 @@ export const useAchievements = () => {
         toast.success(`🏆 Достижение разблокировано: ${achievement.name_ru}!`);
       }
     });
-  }, [profile?.level, profile?.crystals, profile?.diamonds, profile?.streak_days, profile?.pet_changes, profile?.quests_completed, achievements, userAchievements]);
+  }, [profile, achievements, userAchievements, checkAchievementRequirement, unlockMutation]);
 
   // Get achievement status
   const getAchievementStatus = useCallback((achievement: Achievement) => {

@@ -1,0 +1,460 @@
+From c0292a972ac24bd8f8776e9abdc08582ccf33244 Mon Sep 17 00:00:00 2001
+From: artexya <artex@yandex.ru>
+Date: Sun, 28 Dec 2025 14:51:21 +0300
+Subject: [PATCH] =?UTF-8?q?fix:=20eslint/type=20issues=20=E2=80=94=20repla?=
+ =?UTF-8?q?ce=20any/empty=20interfaces,=20import=20plugin,=20type=20catch?=
+ =?UTF-8?q?=20blocks?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/components/ParallaxBackground.tsx       |  5 +++--
+ src/components/ProfilePage.tsx              |  2 +-
+ src/components/admin/QuizzesAdminTab.tsx    |  2 +-
+ src/components/ui/command.tsx               |  4 +---
+ src/components/ui/textarea.tsx              |  2 +-
+ src/hooks/useAdmin.ts                       |  4 ++--
+ src/hooks/useGameState.ts                   | 23 ++++++++++++---------
+ src/hooks/useShop.ts                        | 17 ++++++++-------
+ src/hooks/useSoundEffects.ts                |  9 +++++++-
+ supabase/functions/accessory-equip/index.ts |  7 ++++---
+ supabase/functions/admin/index.ts           | 13 ++++++------
+ supabase/functions/game-click/index.ts      |  2 +-
+ supabase/functions/game-passive/index.ts    |  2 +-
+ supabase/functions/shop-purchase/index.ts   | 18 +++++++++++++---
+ supabase/functions/telegram-bot/index.ts    | 10 ++++-----
+ tailwind.config.ts                          |  3 ++-
+ 16 files changed, 75 insertions(+), 48 deletions(-)
+
+diff --git a/src/components/ParallaxBackground.tsx b/src/components/ParallaxBackground.tsx
+index 682d0fa..86dbce6 100644
+--- a/src/components/ParallaxBackground.tsx
++++ b/src/components/ParallaxBackground.tsx
+@@ -137,9 +137,10 @@ export const ParallaxBackground = () => {
+ 
+     // Request permission for iOS 13+
+     const requestPermission = async () => {
+-      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
++      const req = (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission;
++      if (typeof req === 'function') {
+         try {
+-          const permission = await (DeviceOrientationEvent as any).requestPermission();
++          const permission = await req();
+           if (permission === 'granted') {
+             window.addEventListener('deviceorientation', handleOrientation, true);
+           }
+diff --git a/src/components/ProfilePage.tsx b/src/components/ProfilePage.tsx
+index 548087d..350e955 100644
+--- a/src/components/ProfilePage.tsx
++++ b/src/components/ProfilePage.tsx
+@@ -143,7 +143,7 @@ const ProfilePage = () => {
+         {sections.map(section => (
+           <button
+             key={section.id}
+-            onClick={() => setActiveSection(section.id as any)}
++            onClick={() => setActiveSection(section.id as 'stats' | 'friends' | 'gifts')}
+             className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl transition-all relative ${
+               activeSection === section.id 
+                 ? 'glass-card-premium text-primary' 
+diff --git a/src/components/admin/QuizzesAdminTab.tsx b/src/components/admin/QuizzesAdminTab.tsx
+index b91619b..e7ab9db 100644
+--- a/src/components/admin/QuizzesAdminTab.tsx
++++ b/src/components/admin/QuizzesAdminTab.tsx
+@@ -90,7 +90,7 @@ const QuizzesAdminTab = () => {
+     }
+   };
+ 
+-  const updateQuestion = (index: number, field: keyof QuizQuestion, value: any, target: 'new' | 'edit') => {
++  const updateQuestion = (index: number, field: keyof QuizQuestion, value: string | number | string[], target: 'new' | 'edit') => {
+     if (target === 'new') {
+       const updated = [...newQuiz.questions];
+       updated[index] = { ...updated[index], [field]: value };
+diff --git a/src/components/ui/command.tsx b/src/components/ui/command.tsx
+index 68d5378..fd655e4 100644
+--- a/src/components/ui/command.tsx
++++ b/src/components/ui/command.tsx
+@@ -21,9 +21,7 @@ const Command = React.forwardRef<
+ ));
+ Command.displayName = CommandPrimitive.displayName;
+ 
+-interface CommandDialogProps extends DialogProps {}
+-
+-const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
++const CommandDialog: React.FC<DialogProps> = ({ children, ...props }) => {
+   return (
+     <Dialog {...props}>
+       <DialogContent className="overflow-hidden p-0 shadow-lg">
+diff --git a/src/components/ui/textarea.tsx b/src/components/ui/textarea.tsx
+index 4a5643e..f53c1cc 100644
+--- a/src/components/ui/textarea.tsx
++++ b/src/components/ui/textarea.tsx
+@@ -2,7 +2,7 @@ import * as React from "react";
+ 
+ import { cn } from "@/lib/utils";
+ 
+-export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
++type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
+ 
+ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, ...props }, ref) => {
+   return (
+diff --git a/src/hooks/useAdmin.ts b/src/hooks/useAdmin.ts
+index 983a40b..9101b7e 100644
+--- a/src/hooks/useAdmin.ts
++++ b/src/hooks/useAdmin.ts
+@@ -50,7 +50,7 @@ export function useAdmin(adminSecret: string) {
+   const [loading, setLoading] = useState(false);
+   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+ 
+-  const callAdmin = useCallback(async (action: string, payload?: any) => {
++  const callAdmin = useCallback(async (action: string, payload?: unknown) => {
+     setLoading(true);
+     try {
+       const { data, error } = await supabase.functions.invoke('admin', {
+@@ -81,7 +81,7 @@ export function useAdmin(adminSecret: string) {
+ 
+       setIsAuthorized(true);
+       return data;
+-    } catch (err: any) {
++    } catch (err: unknown) {
+       console.error('Admin call error:', err);
+       toast.error('Ошибка соединения');
+       return null;
+diff --git a/src/hooks/useGameState.ts b/src/hooks/useGameState.ts
+index 64b4b15..9353ce6 100644
+--- a/src/hooks/useGameState.ts
++++ b/src/hooks/useGameState.ts
+@@ -106,8 +106,8 @@ export function useGameState() {
+   const [isClicking, setIsClicking] = useState(false);
+ 
+   // Проверяем, работаем ли мы в Telegram
+-  const isTelegram = typeof window !== 'undefined' && 
+-    (window as any).Telegram?.WebApp?.initData?.length > 0;
++  type WinWithTelegram = Window & { Telegram?: { WebApp?: { initData?: string } } };
++  const isTelegram = typeof window !== 'undefined' && ((window as WinWithTelegram).Telegram?.WebApp?.initData?.length ?? 0) > 0;
+ 
+   // Загрузка профиля
+   const loadProfile = useCallback(async () => {
+@@ -172,13 +172,16 @@ export function useGameState() {
+         .eq('user_id', user.id);
+ 
+       if (userAccessories) {
+-        const formattedAccessories: UserAccessory[] = userAccessories.map((ua: any) => ({
+-          ...ua.accessories,
+-          is_equipped: ua.is_equipped
+-        }));
++        const formattedAccessories: UserAccessory[] = userAccessories.map((ua: unknown) => {
++          const item = ua as { is_equipped: boolean; accessories: Accessory };
++          return {
++            ...item.accessories,
++            is_equipped: item.is_equipped
++          };
++        });
+         setAccessories(formattedAccessories);
+       }
+-    } catch (err) {
++    } catch (err: unknown) {
+       console.error('Ошибка:', err);
+       // В DEV режиме используем мок при любой ошибке
+       if (import.meta.env.DEV) {
+@@ -276,7 +279,7 @@ export function useGameState() {
+       }
+ 
+       return data as ClickResult;
+-    } catch (err) {
++    } catch (err: unknown) {
+       console.error('Ошибка:', err);
+       hapticNotification('error');
+       return null;
+@@ -351,7 +354,7 @@ export function useGameState() {
+       
+       toast.success(message);
+       return data as ChestResult;
+-    } catch (err) {
++    } catch (err: unknown) {
+       hapticNotification('error');
+       return null;
+     }
+@@ -390,7 +393,7 @@ export function useGameState() {
+       }
+ 
+       return data as PassiveResult;
+-    } catch (err) {
++    } catch (err: unknown) {
+       hapticNotification('error');
+       return null;
+     }
+diff --git a/src/hooks/useShop.ts b/src/hooks/useShop.ts
+index 59f2bf1..6e0463c 100644
+--- a/src/hooks/useShop.ts
++++ b/src/hooks/useShop.ts
+@@ -82,14 +82,17 @@ export function useShop() {
+           .eq('user_id', user.id);
+ 
+         if (userAccs) {
+-          const formatted: UserAccessory[] = userAccs.map((ua: any) => ({
+-            ...ua.accessories,
+-            is_equipped: ua.is_equipped
+-          }));
++          const formatted: UserAccessory[] = userAccs.map((ua: unknown) => {
++            const item = ua as { is_equipped: boolean; accessories: Accessory };
++            return {
++              ...item.accessories,
++              is_equipped: item.is_equipped
++            };
++          });
+           setUserAccessories(formatted);
+         }
+       }
+-    } catch (err) {
++    } catch (err: unknown) {
+       console.error('Ошибка загрузки магазина:', err);
+     } finally {
+       setLoading(false);
+@@ -131,7 +134,7 @@ export function useShop() {
+       // Перезагружаем данные
+       await loadShop();
+       return true;
+-    } catch (err) {
++    } catch (err: unknown) {
+       console.error('Ошибка покупки:', err);
+       hapticNotification('error');
+       toast.error('Ошибка покупки');
+@@ -173,7 +176,7 @@ export function useShop() {
+       }));
+ 
+       return true;
+-    } catch (err) {
++    } catch (err: unknown) {
+       hapticNotification('error');
+       return false;
+     }
+diff --git a/src/hooks/useSoundEffects.ts b/src/hooks/useSoundEffects.ts
+index 7193ca9..a90eabf 100644
+--- a/src/hooks/useSoundEffects.ts
++++ b/src/hooks/useSoundEffects.ts
+@@ -19,7 +19,14 @@ export const useSoundEffects = () => {
+ 
+   const getAudioContext = useCallback(() => {
+     if (!audioContextRef.current) {
+-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
++      const win = window as unknown as {
++        AudioContext?: typeof AudioContext;
++        webkitAudioContext?: typeof AudioContext;
++      };
++      const Ctor = win.AudioContext ?? win.webkitAudioContext;
++      // Fallback: if neither exists, this will throw when constructing
++      const CtorTyped = Ctor as unknown as new () => AudioContext;
++      audioContextRef.current = new CtorTyped();
+     }
+     return audioContextRef.current;
+   }, []);
+diff --git a/supabase/functions/accessory-equip/index.ts b/supabase/functions/accessory-equip/index.ts
+index 0c0abf8..d1034d3 100644
+--- a/supabase/functions/accessory-equip/index.ts
++++ b/supabase/functions/accessory-equip/index.ts
+@@ -64,7 +64,8 @@ serve(async (req) => {
+       )
+     }
+ 
+-    const accessory = userAccessory.accessories as any
++    type AccessoryMinimal = { id: string; name: string; name_ru: string; category: string };
++    const accessory = userAccessory.accessories as AccessoryMinimal;
+     const shouldEquip = equip !== undefined ? equip : !userAccessory.is_equipped
+ 
+     if (shouldEquip) {
+@@ -80,8 +81,8 @@ serve(async (req) => {
+ 
+       if (sameCategory) {
+         for (const item of sameCategory) {
+-          const itemAcc = item.accessories as any
+-          if (itemAcc?.category === accessory.category) {
++          const itemAcc = item.accessories as AccessoryMinimal | undefined;
++          if (itemAcc && itemAcc.category === accessory.category) {
+             await supabaseClient
+               .from('user_accessories')
+               .update({ is_equipped: false })
+diff --git a/supabase/functions/admin/index.ts b/supabase/functions/admin/index.ts
+index 77e6d2c..58812a9 100644
+--- a/supabase/functions/admin/index.ts
++++ b/supabase/functions/admin/index.ts
+@@ -7,7 +7,7 @@ const corsHeaders = {
+ }
+ 
+ // Проверка админа: Telegram ID + Secret Key + IP Whitelist
+-async function validateAdmin(req: Request, supabaseAdmin: any): Promise<{ valid: boolean; error?: string }> {
++async function validateAdmin(req: Request, supabaseAdmin: ReturnType<typeof createClient>): Promise<{ valid: boolean; error?: string }> {
+   try {
+     const adminSecret = req.headers.get('x-admin-secret')
+     
+@@ -103,7 +103,8 @@ serve(async (req) => {
+       )
+     }
+ 
+-    const { action, payload } = await req.json()
++    const body = await req.json() as { action?: string; payload?: unknown };
++    const { action, payload } = body;
+     console.log('Admin action:', action, payload)
+ 
+     switch (action) {
+@@ -198,7 +199,7 @@ serve(async (req) => {
+ 
+       // === ПОЛЬЗОВАТЕЛИ ===
+       case 'get_users': {
+-        const { page = 1, limit = 20, search = '' } = payload || {}
++        const { page = 1, limit = 20, search = '' } = (payload as { page?: number; limit?: number; search?: string } ) || {}
+         const offset = (page - 1) * limit
+ 
+         let query = supabaseAdmin
+@@ -220,7 +221,7 @@ serve(async (req) => {
+       }
+ 
+       case 'update_user': {
+-        const { userId, updates } = payload
++        const { userId, updates } = (payload as { userId?: string; updates?: Record<string, unknown> }) || {}
+         
+         if (!userId) {
+           return new Response(
+@@ -231,9 +232,9 @@ serve(async (req) => {
+ 
+         // Разрешённые поля для обновления
+         const allowedFields = ['level', 'xp', 'crystals', 'diamonds', 'stones', 'is_banned', 'passive_rate']
+-        const safeUpdates: Record<string, any> = {}
++        const safeUpdates: Record<string, unknown> = {}
+         
+-        for (const [key, value] of Object.entries(updates)) {
++        for (const [key, value] of Object.entries(updates || {} as Record<string, unknown>)) {
+           if (allowedFields.includes(key)) {
+             safeUpdates[key] = value
+           }
+diff --git a/supabase/functions/game-click/index.ts b/supabase/functions/game-click/index.ts
+index e85266e..032825d 100644
+--- a/supabase/functions/game-click/index.ts
++++ b/supabase/functions/game-click/index.ts
+@@ -97,7 +97,7 @@ serve(async (req) => {
+     const crystalsEarned = 1
+     const xpEarned = 0.5
+ 
+-    let newCrystals = Number(profile.crystals) + crystalsEarned
++    const newCrystals = Number(profile.crystals) + crystalsEarned
+     let newXp = Number(profile.xp) + xpEarned
+     let newLevel = profile.level
+     let leveledUp = false
+diff --git a/supabase/functions/game-passive/index.ts b/supabase/functions/game-passive/index.ts
+index 62e78aa..8163b00 100644
+--- a/supabase/functions/game-passive/index.ts
++++ b/supabase/functions/game-passive/index.ts
+@@ -77,7 +77,7 @@ serve(async (req) => {
+     // Вычисляем пассивный доход
+     const passiveRate = Number(profile.passive_rate) // кристаллов в секунду
+     const passiveSeconds = offlineHours * 60 * 60
+-    let crystalsEarned = Math.floor(passiveRate * passiveSeconds)
++    const crystalsEarned = Math.floor(passiveRate * passiveSeconds)
+ 
+     // Проверяем штраф за долгий оффлайн
+     const daysSinceActive = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24)
+diff --git a/supabase/functions/shop-purchase/index.ts b/supabase/functions/shop-purchase/index.ts
+index 3731bfa..c61a372 100644
+--- a/supabase/functions/shop-purchase/index.ts
++++ b/supabase/functions/shop-purchase/index.ts
+@@ -61,7 +61,19 @@ serve(async (req) => {
+       )
+     }
+ 
+-    let item: any
++    type ShopItemMinimal = {
++      id: string;
++      name_ru: string;
++      required_level?: number;
++      price_crystals?: number;
++      price_diamonds?: number;
++      effect_type?: string | null;
++      effect_value?: number | null;
++      is_golden?: boolean;
++      discount_percent?: number;
++    };
++
++    let item: ShopItemMinimal | null = null
+     let priceCrystals = 0
+     let priceDiamonds = 0
+     let effectType: string | null = null
+@@ -177,7 +189,7 @@ serve(async (req) => {
+     }
+ 
+     // Списываем валюту и применяем эффект
+-    const updates: Record<string, any> = {
++    const updates: Record<string, unknown> = {
+       crystals: userCrystals - priceCrystals,
+       diamonds: userDiamonds - priceDiamonds,
+       last_active_at: new Date().toISOString()
+@@ -225,7 +237,7 @@ serve(async (req) => {
+     return new Response(
+       JSON.stringify({
+         success: true,
+-        item: item.name_ru,
++        item: item?.name_ru || null,
+         priceCrystals,
+         priceDiamonds,
+         newCrystals: updates.crystals,
+diff --git a/supabase/functions/telegram-bot/index.ts b/supabase/functions/telegram-bot/index.ts
+index 073bd76..a9112ca 100644
+--- a/supabase/functions/telegram-bot/index.ts
++++ b/supabase/functions/telegram-bot/index.ts
+@@ -128,18 +128,18 @@ async function updateLastMessage(telegramId: number) {
+   }
+ }
+ 
+-async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: any, imageUrl?: string) {
++async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: unknown, imageUrl?: string) {
+   // If there's an image, send photo with caption
+   if (imageUrl) {
+     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+-    const body: any = {
++    const body: Record<string, unknown> = {
+       chat_id: chatId,
+       photo: imageUrl,
+       caption: text,
+       parse_mode: 'HTML',
+     };
+     if (replyMarkup) {
+-      body.reply_markup = replyMarkup;
++      (body as Record<string, unknown>)["reply_markup"] = replyMarkup;
+     }
+     const response = await fetch(url, {
+       method: 'POST',
+@@ -151,13 +151,13 @@ async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: a
+ 
+   // Regular text message
+   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+-  const body: any = {
++  const body: Record<string, unknown> = {
+     chat_id: chatId,
+     text,
+     parse_mode: 'HTML',
+   };
+   if (replyMarkup) {
+-    body.reply_markup = replyMarkup;
++    (body as Record<string, unknown>)["reply_markup"] = replyMarkup;
+   }
+   
+   const response = await fetch(url, {
+diff --git a/tailwind.config.ts b/tailwind.config.ts
+index cedf2c6..4ced8fc 100644
+--- a/tailwind.config.ts
++++ b/tailwind.config.ts
+@@ -1,4 +1,5 @@
+ import type { Config } from "tailwindcss";
++import tailwindcssAnimate from "tailwindcss-animate";
+ 
+ export default {
+   darkMode: ["class"],
+@@ -198,5 +199,5 @@ export default {
+       },
+     },
+   },
+-  plugins: [require("tailwindcss-animate")],
++  plugins: [tailwindcssAnimate],
+ } satisfies Config;
+-- 
+2.43.0
+
