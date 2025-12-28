@@ -25,6 +25,8 @@ interface PetType {
   price_diamonds: number;
   is_default: boolean;
   description_ru: string | null;
+  bonus_type: string | null;
+  bonus_value: number;
 }
 
 const PetSelector = ({ 
@@ -81,6 +83,22 @@ const PetSelector = ({
     setParticles(newParticles);
     setTimeout(() => setParticles([]), 1500);
   }, []);
+
+  const formatBonus = (bonusType: string, bonusValue: number): string => {
+    const bonusLabels: Record<string, string> = {
+      click_multiplier: `×${bonusValue} к кликам`,
+      passive_boost: `+${Math.round(bonusValue * 100)}% пассивный доход`,
+      xp_multiplier: `×${bonusValue} XP`,
+      crystal_boost: `+${Math.round(bonusValue * 100)}% кристаллов`,
+      streak_protection: bonusValue >= 999 ? 'Стрик не теряется' : `Защита стрика ${bonusValue}x`,
+      chest_bonus: `+${Math.round(bonusValue * 100)}% к сундуку`,
+      all_boost: `+${Math.round(bonusValue * 100)}% ко всему`,
+      daily_bonus: `+${Math.round(bonusValue * 100)}% дневной бонус`,
+      friend_bonus: `+${Math.round(bonusValue * 100)}% бонус друзей`,
+      currency_boost: `+${Math.round(bonusValue * 100)}% валюты`,
+    };
+    return bonusLabels[bonusType] || `+${bonusValue}`;
+  };
 
   const isPetOwned = (petType: string) => ownedPets.includes(petType);
 
@@ -377,6 +395,12 @@ const PetSelector = ({
               <p className="font-bold">{selectedPetData.name_ru}</p>
               {selectedPetData.description_ru && (
                 <p className="text-xs text-muted-foreground">{selectedPetData.description_ru}</p>
+              )}
+              {selectedPetData.bonus_type && selectedPetData.bonus_value > 0 && (
+                <div className="flex items-center justify-center gap-1 text-xs text-primary font-medium">
+                  <span>✨</span>
+                  <span>{formatBonus(selectedPetData.bonus_type, selectedPetData.bonus_value)}</span>
+                </div>
               )}
             </motion.div>
           </div>

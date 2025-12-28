@@ -524,6 +524,8 @@ export type Database = {
       }
       pet_types: {
         Row: {
+          bonus_type: string | null
+          bonus_value: number | null
           created_at: string
           description: string | null
           description_ru: string | null
@@ -537,6 +539,8 @@ export type Database = {
           type: string
         }
         Insert: {
+          bonus_type?: string | null
+          bonus_value?: number | null
           created_at?: string
           description?: string | null
           description_ru?: string | null
@@ -550,6 +554,8 @@ export type Database = {
           type: string
         }
         Update: {
+          bonus_type?: string | null
+          bonus_value?: number | null
           created_at?: string
           description?: string | null
           description_ru?: string | null

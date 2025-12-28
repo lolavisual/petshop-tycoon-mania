@@ -4,7 +4,7 @@ import { useAdmin, AdminStats, AdminUser, AdminArticle } from '@/hooks/useAdmin'
 import { 
   Shield, Users, FileText, BarChart3, Send, Ban, 
   CheckCircle, XCircle, Search, ChevronLeft, ChevronRight,
-  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target
+  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target, PawPrint
 } from 'lucide-react';
 import ProductsAdminTab from '@/components/ProductsAdminTab';
 import PromotionsAdminTab from '@/components/admin/PromotionsAdminTab';
@@ -12,11 +12,12 @@ import QuizzesAdminTab from '@/components/admin/QuizzesAdminTab';
 import QuestsAdminTab from '@/components/admin/QuestsAdminTab';
 import BroadcastsAdminTab from '@/components/admin/BroadcastsAdminTab';
 import OrdersAdminTab from '@/components/admin/OrdersAdminTab';
+import PetsAdminTab from '@/components/admin/PetsAdminTab';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders';
+type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders' | 'pets';
 
 const AdminPage = () => {
   const [adminSecret, setAdminSecret] = useState('');
@@ -243,6 +244,7 @@ const AdminPage = () => {
           { id: 'articles', icon: FileText, label: 'Статьи' },
           { id: 'products', icon: Package, label: 'Товары' },
           { id: 'promotions', icon: Tag, label: 'Акции' },
+          { id: 'pets', icon: PawPrint, label: 'Питомцы' },
           { id: 'quests', icon: Target, label: 'Квесты' },
           { id: 'quizzes', icon: HelpCircle, label: 'Квизы' },
           { id: 'mailings', icon: Megaphone, label: 'Рассылки' },
@@ -559,6 +561,11 @@ const AdminPage = () => {
           {/* Квесты */}
           {activeTab === 'quests' && (
             <QuestsAdminTab />
+          )}
+
+          {/* Питомцы */}
+          {activeTab === 'pets' && (
+            <PetsAdminTab />
           )}
 
           {/* Квизы */}
