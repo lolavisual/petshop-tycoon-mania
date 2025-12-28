@@ -97,7 +97,7 @@ serve(async (req) => {
     const crystalsEarned = 1
     const xpEarned = 0.5
 
-    let newCrystals = Number(profile.crystals) + crystalsEarned
+    const newCrystals = Number(profile.crystals) + crystalsEarned
     let newXp = Number(profile.xp) + xpEarned
     let newLevel = profile.level
     let leveledUp = false

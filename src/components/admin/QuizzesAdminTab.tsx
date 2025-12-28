@@ -90,7 +90,7 @@ const QuizzesAdminTab = () => {
     }
   };
 
-  const updateQuestion = (index: number, field: keyof QuizQuestion, value: any, target: 'new' | 'edit') => {
+  const updateQuestion = (index: number, field: keyof QuizQuestion, value: string | number | string[], target: 'new' | 'edit') => {
     if (target === 'new') {
       const updated = [...newQuiz.questions];
       updated[index] = { ...updated[index], [field]: value };

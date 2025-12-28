@@ -137,9 +137,10 @@ export const ParallaxBackground = () => {
 
     // Request permission for iOS 13+
     const requestPermission = async () => {
-      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      const req = (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission;
+      if (typeof req === 'function') {
         try {
-          const permission = await (DeviceOrientationEvent as any).requestPermission();
+          const permission = await req();
           if (permission === 'granted') {
             window.addEventListener('deviceorientation', handleOrientation, true);
           }

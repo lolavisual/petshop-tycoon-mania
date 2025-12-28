@@ -82,14 +82,17 @@ export function useShop() {
           .eq('user_id', user.id);
 
         if (userAccs) {
-          const formatted: UserAccessory[] = userAccs.map((ua: any) => ({
-            ...ua.accessories,
-            is_equipped: ua.is_equipped
-          }));
+          const formatted: UserAccessory[] = userAccs.map((ua: unknown) => {
+            const item = ua as { is_equipped: boolean; accessories: Accessory };
+            return {
+              ...item.accessories,
+              is_equipped: item.is_equipped
+            };
+          });
           setUserAccessories(formatted);
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Ошибка загрузки магазина:', err);
     } finally {
       setLoading(false);
@@ -131,7 +134,7 @@ export function useShop() {
       // Перезагружаем данные
       await loadShop();
       return true;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Ошибка покупки:', err);
       hapticNotification('error');
       toast.error('Ошибка покупки');
@@ -173,7 +176,7 @@ export function useShop() {
       }));
 
       return true;
-    } catch (err) {
+    } catch (err: unknown) {
       hapticNotification('error');
       return false;
     }
