@@ -77,7 +77,7 @@ const PexelsPet = ({ isClicking, level, hasSantaHat = false, petType = 'dog', on
         setImageUrl('https://images.pexels.com/photos/1805164/pexels-photo-1805164.jpeg?auto=compress&cs=tinysrgb&w=400');
       } finally {
         setLoading(false);
-        if (isTransitioning) {
+        if (isChange) {
           setTimeout(() => {
             setIsTransitioning(false);
             onPetChangeComplete?.();

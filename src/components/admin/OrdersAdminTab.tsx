@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -51,27 +51,7 @@ const OrdersAdminTab = () => {
   const [managerNotes, setManagerNotes] = useState('');
   const perPage = 10;
 
-  useEffect(() => {
-    loadOrders();
-    
-    // Subscribe to realtime updates
-    const channel = supabase
-      .channel('orders-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'orders' },
-        () => {
-          loadOrders();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [page, statusFilter, search]);
-
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
       let query = supabase
@@ -100,7 +80,27 @@ const OrdersAdminTab = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, statusFilter, search]);
+
+  useEffect(() => {
+    loadOrders();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('orders-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        () => {
+          loadOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadOrders]);
 
   const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
     try {

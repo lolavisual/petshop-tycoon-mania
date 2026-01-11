@@ -50,7 +50,7 @@ export function useAdmin(adminSecret: string) {
   const [loading, setLoading] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
-  const callAdmin = useCallback(async (action: string, payload?: any) => {
+  const callAdmin = useCallback(async (action: string, payload?: unknown) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('admin', {
@@ -81,7 +81,7 @@ export function useAdmin(adminSecret: string) {
 
       setIsAuthorized(true);
       return data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Admin call error:', err);
       toast.error('Ошибка соединения');
       return null;

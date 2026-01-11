@@ -143,7 +143,7 @@ const ProfilePage = () => {
         {sections.map(section => (
           <button
             key={section.id}
-            onClick={() => setActiveSection(section.id as any)}
+            onClick={() => setActiveSection(section.id as 'stats' | 'friends' | 'gifts')}
             className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl transition-all relative ${
               activeSection === section.id 
                 ? 'glass-card-premium text-primary' 

@@ -106,8 +106,8 @@ export function useGameState() {
   const [isClicking, setIsClicking] = useState(false);
 
   // Проверяем, работаем ли мы в Telegram
-  const isTelegram = typeof window !== 'undefined' && 
-    (window as any).Telegram?.WebApp?.initData?.length > 0;
+  type WinWithTelegram = Window & { Telegram?: { WebApp?: { initData?: string } } };
+  const isTelegram = typeof window !== 'undefined' && ((window as WinWithTelegram).Telegram?.WebApp?.initData?.length ?? 0) > 0;
 
   // Загрузка профиля
   const loadProfile = useCallback(async () => {
@@ -172,13 +172,16 @@ export function useGameState() {
         .eq('user_id', user.id);
 
       if (userAccessories) {
-        const formattedAccessories: UserAccessory[] = userAccessories.map((ua: any) => ({
-          ...ua.accessories,
-          is_equipped: ua.is_equipped
-        }));
+        const formattedAccessories: UserAccessory[] = userAccessories.map((ua: unknown) => {
+          const item = ua as { is_equipped: boolean; accessories: Accessory };
+          return {
+            ...item.accessories,
+            is_equipped: item.is_equipped
+          };
+        });
         setAccessories(formattedAccessories);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Ошибка:', err);
       // В DEV режиме используем мок при любой ошибке
       if (import.meta.env.DEV) {
@@ -276,7 +279,7 @@ export function useGameState() {
       }
 
       return data as ClickResult;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Ошибка:', err);
       hapticNotification('error');
       return null;
@@ -351,7 +354,7 @@ export function useGameState() {
       
       toast.success(message);
       return data as ChestResult;
-    } catch (err) {
+    } catch (err: unknown) {
       hapticNotification('error');
       return null;
     }
@@ -390,7 +393,7 @@ export function useGameState() {
       }
 
       return data as PassiveResult;
-    } catch (err) {
+    } catch (err: unknown) {
       hapticNotification('error');
       return null;
     }

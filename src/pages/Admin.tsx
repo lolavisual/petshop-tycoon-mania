@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAdmin, AdminStats, AdminUser, AdminArticle } from '@/hooks/useAdmin';
 import { 
@@ -71,28 +71,28 @@ const AdminPage = () => {
     } else if (activeTab === 'articles') {
       loadArticles();
     }
-  }, [activeTab, isAuthenticated, usersPage, usersSearch, articlesPage, articlesStatus]);
+  }, [activeTab, isAuthenticated, loadStats, loadUsers, loadArticles]);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     const data = await getStats();
     if (data) setStats(data);
-  };
+  }, [getStats]);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     const data = await getUsers(usersPage, 20, usersSearch);
     if (data) {
       setUsers(data.users);
       setUsersTotal(data.total);
     }
-  };
+  }, [getUsers, usersPage, usersSearch]);
 
-  const loadArticles = async () => {
+  const loadArticles = useCallback(async () => {
     const data = await getArticles(articlesStatus, articlesPage, 20);
     if (data) {
       setArticles(data.articles);
       setArticlesTotal(data.total);
     }
-  };
+  }, [getArticles, articlesStatus, articlesPage]);
 
   const handleLogin = async () => {
     if (!adminSecret.trim()) {
