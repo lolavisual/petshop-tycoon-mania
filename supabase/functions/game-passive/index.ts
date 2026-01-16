@@ -10,6 +10,42 @@ const MAX_PASSIVE_HOURS = 8 // Максимум 8 часов пассивног�
 const OFFLINE_PENALTY_DAYS = 10 // После 10 дней оффлайн
 const OFFLINE_PENALTY_XP = 0.3 // -30% XP
 
+// Бонусы питомцев
+interface PetBonus {
+  bonus_type: string | null
+  bonus_value: number | null
+  pet_level?: number
+}
+
+function applyPetBonusToPassive(baseValue: number, bonus: PetBonus): number {
+  if (!bonus.bonus_type || !bonus.bonus_value) return baseValue
+  
+  const levelMultiplier = 1 + ((bonus.pet_level || 1) - 1) * 0.1
+  const actualBonusValue = bonus.bonus_value * levelMultiplier
+  
+  // passive_boost directly affects passive income
+  if (bonus.bonus_type === 'passive_boost') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  // all_boost affects everything
+  if (bonus.bonus_type === 'all_boost') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  // currency_boost affects currency
+  if (bonus.bonus_type === 'currency_boost') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  // crystal_boost affects crystals
+  if (bonus.bonus_type === 'crystal_boost') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  return baseValue
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -55,6 +91,30 @@ serve(async (req) => {
       )
     }
 
+    // Получаем бонус текущего питомца
+    let petBonus: PetBonus = { bonus_type: null, bonus_value: null, pet_level: 1 }
+    
+    const { data: petType } = await supabaseClient
+      .from('pet_types')
+      .select('bonus_type, bonus_value')
+      .eq('type', profile.pet_type)
+      .single()
+    
+    if (petType) {
+      const { data: userPet } = await supabaseClient
+        .from('user_pets')
+        .select('pet_level')
+        .eq('user_id', user.id)
+        .eq('pet_type', profile.pet_type)
+        .single()
+      
+      petBonus = {
+        bonus_type: petType.bonus_type,
+        bonus_value: petType.bonus_value,
+        pet_level: userPet?.pet_level || 1
+      }
+    }
+
     const now = new Date()
     const lastClaim = new Date(profile.last_passive_claim)
     const lastActive = new Date(profile.last_active_at)
@@ -79,11 +139,17 @@ serve(async (req) => {
     const passiveSeconds = offlineHours * 60 * 60
     let crystalsEarned = Math.floor(passiveRate * passiveSeconds)
 
+    // Применяем бонус питомца
+    crystalsEarned = applyPetBonusToPassive(crystalsEarned, petBonus)
+
     // Проверяем штраф за долгий оффлайн
     const daysSinceActive = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24)
     let xpPenalty = 0
     
-    if (daysSinceActive >= OFFLINE_PENALTY_DAYS) {
+    // Проверяем защиту от потери стрика
+    const hasStreakProtection = petBonus.bonus_type === 'streak_protection'
+    
+    if (daysSinceActive >= OFFLINE_PENALTY_DAYS && !hasStreakProtection) {
       // Применяем штраф XP
       const currentXp = Number(profile.xp)
       xpPenalty = Math.floor(currentXp * OFFLINE_PENALTY_XP)
@@ -118,7 +184,9 @@ serve(async (req) => {
         xpPenalty,
         hadPenalty: xpPenalty > 0,
         newCrystals: Number(profile.crystals) + crystalsEarned,
-        newXp
+        newXp,
+        petBonusApplied: petBonus.bonus_type ? true : false,
+        streakProtected: hasStreakProtection && daysSinceActive >= OFFLINE_PENALTY_DAYS
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
