@@ -13,6 +13,47 @@ const STREAK_REWARDS = {
   14: 400  // 14 дней = 400 камней
 }
 
+// Бонусы питомцев
+interface PetBonus {
+  bonus_type: string | null
+  bonus_value: number | null
+  pet_level?: number
+}
+
+function applyPetBonusToChest(baseValue: number, bonus: PetBonus): number {
+  if (!bonus.bonus_type || !bonus.bonus_value) return baseValue
+  
+  const levelMultiplier = 1 + ((bonus.pet_level || 1) - 1) * 0.1
+  const actualBonusValue = bonus.bonus_value * levelMultiplier
+  
+  // chest_bonus directly affects chest rewards
+  if (bonus.bonus_type === 'chest_bonus') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  // daily_bonus affects daily rewards (chest)
+  if (bonus.bonus_type === 'daily_bonus') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  // all_boost affects everything
+  if (bonus.bonus_type === 'all_boost') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  // currency_boost affects currency
+  if (bonus.bonus_type === 'currency_boost') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  // crystal_boost affects crystals
+  if (bonus.bonus_type === 'crystal_boost') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  return baseValue
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -58,6 +99,30 @@ serve(async (req) => {
       )
     }
 
+    // Получаем бонус текущего питомца
+    let petBonus: PetBonus = { bonus_type: null, bonus_value: null, pet_level: 1 }
+    
+    const { data: petType } = await supabaseClient
+      .from('pet_types')
+      .select('bonus_type, bonus_value')
+      .eq('type', profile.pet_type)
+      .single()
+    
+    if (petType) {
+      const { data: userPet } = await supabaseClient
+        .from('user_pets')
+        .select('pet_level')
+        .eq('user_id', user.id)
+        .eq('pet_type', profile.pet_type)
+        .single()
+      
+      petBonus = {
+        bonus_type: petType.bonus_type,
+        bonus_value: petType.bonus_value,
+        pet_level: userPet?.pet_level || 1
+      }
+    }
+
     const now = new Date()
     const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
     
@@ -90,6 +155,7 @@ serve(async (req) => {
     // Вычисляем стрик
     let newStreakDays = 1
     let streakBonus = 0
+    let streakProtected = false
     
     if (profile.last_streak_date) {
       const lastStreak = new Date(profile.last_streak_date)
@@ -105,6 +171,15 @@ serve(async (req) => {
       if (lastStreakUTC.getTime() === yesterdayUTC.getTime()) {
         // Продолжаем стрик
         newStreakDays = profile.streak_days + 1
+      } else if (petBonus.bonus_type === 'streak_protection' && lastStreakUTC.getTime() < yesterdayUTC.getTime()) {
+        // Защита стрика от питомца - сохраняем стрик если пропустили один день
+        const twoDaysAgo = new Date(todayUTC)
+        twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2)
+        
+        if (lastStreakUTC.getTime() >= twoDaysAgo.getTime()) {
+          newStreakDays = profile.streak_days + 1
+          streakProtected = true
+        }
       }
       // Иначе стрик сбрасывается до 1
     }
@@ -115,7 +190,11 @@ serve(async (req) => {
     }
 
     // Базовая награда из сундука
-    const baseCrystals = 100 + Math.floor(Math.random() * 50) // 100-150
+    let baseCrystals = 100 + Math.floor(Math.random() * 50) // 100-150
+    
+    // Применяем бонус питомца
+    baseCrystals = applyPetBonusToChest(baseCrystals, petBonus)
+    
     const totalCrystals = baseCrystals
 
     // Обновляем профиль
@@ -147,7 +226,9 @@ serve(async (req) => {
         streakDays: newStreakDays,
         streakMilestone: STREAK_REWARDS[newStreakDays as keyof typeof STREAK_REWARDS] ? newStreakDays : null,
         newCrystals: Number(profile.crystals) + totalCrystals,
-        newStones: Number(profile.stones) + streakBonus
+        newStones: Number(profile.stones) + streakBonus,
+        petBonusApplied: petBonus.bonus_type ? true : false,
+        streakProtected
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

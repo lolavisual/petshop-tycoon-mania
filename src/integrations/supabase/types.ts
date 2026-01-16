@@ -536,6 +536,7 @@ export type Database = {
           name_ru: string
           price_crystals: number
           price_diamonds: number
+          rarity: string
           type: string
         }
         Insert: {
@@ -551,6 +552,7 @@ export type Database = {
           name_ru: string
           price_crystals?: number
           price_diamonds?: number
+          rarity?: string
           type: string
         }
         Update: {
@@ -566,6 +568,7 @@ export type Database = {
           name_ru?: string
           price_crystals?: number
           price_diamonds?: number
+          rarity?: string
           type?: string
         }
         Relationships: []
@@ -922,20 +925,29 @@ export type Database = {
       }
       user_pets: {
         Row: {
+          evolved_at: string | null
           id: string
+          pet_level: number
           pet_type: string
+          pet_xp: number
           purchased_at: string
           user_id: string
         }
         Insert: {
+          evolved_at?: string | null
           id?: string
+          pet_level?: number
           pet_type: string
+          pet_xp?: number
           purchased_at?: string
           user_id: string
         }
         Update: {
+          evolved_at?: string | null
           id?: string
+          pet_level?: number
           pet_type?: string
+          pet_xp?: number
           purchased_at?: string
           user_id?: string
         }

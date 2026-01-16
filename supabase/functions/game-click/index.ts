@@ -35,6 +35,49 @@ function calculateXpForNextLevel(level: number): number {
   return Math.floor(150 * Math.pow(1.4, level - 1))
 }
 
+// Бонусы питомцев
+interface PetBonus {
+  bonus_type: string | null
+  bonus_value: number | null
+  pet_level?: number
+}
+
+function applyPetBonus(baseValue: number, bonus: PetBonus, targetType: string): number {
+  if (!bonus.bonus_type || !bonus.bonus_value) return baseValue
+  
+  const levelMultiplier = 1 + ((bonus.pet_level || 1) - 1) * 0.1
+  const actualBonusValue = bonus.bonus_value * levelMultiplier
+  
+  // click_multiplier affects crystals earned from clicks
+  if (bonus.bonus_type === 'click_multiplier' && targetType === 'crystals') {
+    return Math.floor(baseValue * actualBonusValue)
+  }
+  
+  // xp_multiplier affects XP earned
+  if (bonus.bonus_type === 'xp_multiplier' && targetType === 'xp') {
+    return baseValue * actualBonusValue
+  }
+  
+  // crystal_boost affects crystal earnings
+  if (bonus.bonus_type === 'crystal_boost' && targetType === 'crystals') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  // all_boost affects everything
+  if (bonus.bonus_type === 'all_boost') {
+    return targetType === 'crystals' 
+      ? Math.floor(baseValue * (1 + actualBonusValue))
+      : baseValue * (1 + actualBonusValue)
+  }
+  
+  // currency_boost affects both currencies
+  if (bonus.bonus_type === 'currency_boost' && targetType === 'crystals') {
+    return Math.floor(baseValue * (1 + actualBonusValue))
+  }
+  
+  return baseValue
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -93,9 +136,38 @@ serve(async (req) => {
       )
     }
 
-    // Начисляем ресурсы
-    const crystalsEarned = 1
-    const xpEarned = 0.5
+    // Получаем бонус текущего питомца
+    let petBonus: PetBonus = { bonus_type: null, bonus_value: null, pet_level: 1 }
+    
+    const { data: petType } = await supabaseClient
+      .from('pet_types')
+      .select('bonus_type, bonus_value')
+      .eq('type', profile.pet_type)
+      .single()
+    
+    if (petType) {
+      // Получаем уровень питомца
+      const { data: userPet } = await supabaseClient
+        .from('user_pets')
+        .select('pet_level, pet_xp')
+        .eq('user_id', user.id)
+        .eq('pet_type', profile.pet_type)
+        .single()
+      
+      petBonus = {
+        bonus_type: petType.bonus_type,
+        bonus_value: petType.bonus_value,
+        pet_level: userPet?.pet_level || 1
+      }
+    }
+
+    // Базовые награды
+    let crystalsEarned = 1
+    let xpEarned = 0.5
+
+    // Применяем бонусы питомца
+    crystalsEarned = applyPetBonus(crystalsEarned, petBonus, 'crystals')
+    xpEarned = applyPetBonus(xpEarned, petBonus, 'xp')
 
     let newCrystals = Number(profile.crystals) + crystalsEarned
     let newXp = Number(profile.xp) + xpEarned
@@ -136,12 +208,35 @@ serve(async (req) => {
               .insert({
                 user_id: user.id,
                 accessory_id: accessory.id,
-                is_equipped: accessory.name === 'santa_hat' // Шапка Санты автоматически надевается
+                is_equipped: accessory.name === 'santa_hat'
               })
             
             newAccessory = accessory
           }
         }
+      }
+    }
+
+    // Добавляем XP питомцу (1 XP за каждые 10 кликов)
+    if (petBonus.pet_level && petBonus.pet_level < 10) {
+      const petXpGain = 0.1
+      try {
+        const { data: currentPet } = await supabaseClient
+          .from('user_pets')
+          .select('pet_xp')
+          .eq('user_id', user.id)
+          .eq('pet_type', profile.pet_type)
+          .single()
+        
+        if (currentPet) {
+          await supabaseClient
+            .from('user_pets')
+            .update({ pet_xp: (currentPet.pet_xp || 0) + petXpGain })
+            .eq('user_id', user.id)
+            .eq('pet_type', profile.pet_type)
+        }
+      } catch (e) {
+        console.log('Pet XP update skipped:', e)
       }
     }
 
@@ -152,6 +247,8 @@ serve(async (req) => {
         crystals: newCrystals,
         xp: newXp,
         level: newLevel,
+        total_clicks: (profile.total_clicks || 0) + 1,
+        total_crystals_earned: (profile.total_crystals_earned || 0) + crystalsEarned,
         last_active_at: new Date().toISOString()
       })
       .eq('id', user.id)
@@ -183,7 +280,8 @@ serve(async (req) => {
       crystalsEarned,
       xpEarned,
       leveledUp,
-      newAccessory
+      newAccessory,
+      petBonusApplied: petBonus.bonus_type ? true : false
     }
 
     return new Response(
