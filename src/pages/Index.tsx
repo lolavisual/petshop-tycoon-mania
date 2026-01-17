@@ -4,6 +4,7 @@ import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
 import { useTelegramTheme } from '@/hooks/useTelegramTheme';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { usePetCollection } from '@/hooks/usePetCollection';
 import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3 } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
@@ -16,37 +17,70 @@ import { useDailyQuests } from '@/hooks/useDailyQuests';
 import { useFriends } from '@/hooks/useFriends';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import FloatingParticles from '@/components/game/FloatingParticles';
-// Компонент питомца с шапкой Санты
-const PetAvatar = ({ level, avatarVariant }: { level: number; avatarVariant: number }) => {
+import RarityEffects from '@/components/game/RarityEffects';
+// Компонент питомца с эффектами редкости
+interface PetAvatarProps {
+  level: number;
+  avatarVariant: number;
+  petType?: string;
+  rarity?: 'common' | 'rare' | 'epic' | 'legendary';
+  petLevel?: number;
+}
+
+const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel = 1 }: PetAvatarProps) => {
   const pets = ['🐕', '🐈', '🐹', '🐰', '🦜'];
-  const pet = pets[avatarVariant % pets.length];
+  const petEmojis: Record<string, string> = {
+    dog: '🐕', cat: '🐈', hamster: '🐹', rabbit: '🐰', parrot: '🦜',
+    fox: '🦊', owl: '🦉', unicorn: '🦄', dragon: '🐉', phoenix: '🔥',
+    panda: '🐼', turtle: '🐢', penguin: '🐧', wolf: '🐺', lion: '🦁'
+  };
+  const pet = petType ? (petEmojis[petType] || pets[avatarVariant % pets.length]) : pets[avatarVariant % pets.length];
+  
+  const rarityGlow = {
+    common: '',
+    rare: 'drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]',
+    epic: 'drop-shadow-[0_0_20px_rgba(168,85,247,0.6)]',
+    legendary: 'drop-shadow-[0_0_30px_rgba(251,191,36,0.7)]'
+  };
+
+  const rarityBadge = {
+    common: null,
+    rare: { emoji: '💙', label: 'Редкий' },
+    epic: { emoji: '💜', label: 'Эпический' },
+    legendary: { emoji: '⭐', label: 'Легендарный' }
+  };
   
   return (
     <div className="relative">
+      {/* Эффекты редкости */}
+      <div className="absolute inset-0 flex items-center justify-center" style={{ width: '200px', height: '200px', left: '-30px', top: '-30px' }}>
+        <RarityEffects rarity={rarity} petLevel={petLevel} isActive={rarity !== 'common'} />
+      </div>
+
       {/* Новогодние украшения вокруг питомца */}
       <motion.div 
-        className="absolute -top-12 -left-8 text-2xl"
+        className="absolute -top-12 -left-8 text-2xl z-10"
         animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
         transition={{ duration: 3, repeat: Infinity }}
       >
         ❄️
       </motion.div>
       <motion.div 
-        className="absolute -top-10 -right-8 text-2xl"
+        className="absolute -top-10 -right-8 text-2xl z-10"
         animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.2, 1] }}
         transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
       >
         ⭐
       </motion.div>
       <motion.div 
-        className="absolute top-0 -left-12 text-xl"
+        className="absolute top-0 -left-12 text-xl z-10"
         animate={{ y: [0, -5, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
         🎄
       </motion.div>
       <motion.div 
-        className="absolute top-0 -right-12 text-xl"
+        className="absolute top-0 -right-12 text-xl z-10"
         animate={{ y: [0, -5, 0] }}
         transition={{ duration: 2.2, repeat: Infinity, delay: 0.3 }}
       >
@@ -55,7 +89,7 @@ const PetAvatar = ({ level, avatarVariant }: { level: number; avatarVariant: num
       
       {/* Шапка Санты (красная шапочка) */}
       <motion.div 
-        className="absolute -top-6 left-1/2 -translate-x-1/2 z-10 text-3xl"
+        className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 text-3xl"
         initial={{ y: -50, opacity: 0, rotate: -30 }}
         animate={{ y: 0, opacity: 1, rotate: 15 }}
         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
@@ -63,9 +97,9 @@ const PetAvatar = ({ level, avatarVariant }: { level: number; avatarVariant: num
         🧢
       </motion.div>
       
-      {/* Питомец */}
+      {/* Питомец с эффектом свечения редкости */}
       <motion.div 
-        className="text-8xl select-none"
+        className={`text-8xl select-none relative z-10 ${rarityGlow[rarity]}`}
         whileTap={{ scale: 0.9 }}
         animate={{ y: [0, -5, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
@@ -73,9 +107,35 @@ const PetAvatar = ({ level, avatarVariant }: { level: number; avatarVariant: num
         {pet}
       </motion.div>
       
+      {/* Бейдж редкости */}
+      {rarityBadge[rarity] && (
+        <motion.div
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-20"
+          style={{
+            background: rarity === 'legendary' 
+              ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' 
+              : rarity === 'epic'
+                ? 'linear-gradient(135deg, #a855f7, #9333ea)'
+                : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            color: 'white',
+            boxShadow: rarity === 'legendary' 
+              ? '0 0 15px rgba(251, 191, 36, 0.5)'
+              : rarity === 'epic'
+                ? '0 0 15px rgba(168, 85, 247, 0.5)'
+                : '0 0 15px rgba(59, 130, 246, 0.5)'
+          }}
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          <span>{rarityBadge[rarity].emoji}</span>
+          <span>{rarityBadge[rarity].label}</span>
+          {petLevel > 1 && <span className="ml-1">Ур.{petLevel}</span>}
+        </motion.div>
+      )}
+      
       {/* Снежинки внизу */}
       <motion.div 
-        className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-2 text-lg"
+        className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2 text-lg z-10"
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
@@ -262,6 +322,9 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
 // Главная страница игры
 const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?: number) => void }) => {
   const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
+  const { allPets, ownedPets, getRarityConfig } = usePetCollection(profile?.id);
+  const { playTap, playCrystal, playChest } = useSoundEffects();
+  const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
   const { playTap, playCrystal, playChest } = useSoundEffects();
   const [floatingCrystals, setFloatingCrystals] = useState<{ id: number; x: number; y: number }[]>([]);
   const [crystalId, setCrystalId] = useState(0);
@@ -336,7 +399,19 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
       
       {/* Питомец и зона тапа */}
       <div className="flex flex-col items-center justify-center py-8 space-y-4">
-        <PetAvatar level={profile.level} avatarVariant={profile.avatar_variant} />
+        {(() => {
+          const currentPet = allPets.find(p => p.type === profile.pet_type);
+          const userPet = ownedPets.get(profile.pet_type || 'dog');
+          return (
+            <PetAvatar 
+              level={profile.level} 
+              avatarVariant={profile.avatar_variant}
+              petType={profile.pet_type}
+              rarity={(currentPet?.rarity as 'common' | 'rare' | 'epic' | 'legendary') || 'common'}
+              petLevel={userPet?.pet_level || 1}
+            />
+          );
+        })()}
         <TapZone onTap={onTap} crystals={floatingCrystals} />
       </div>
       
