@@ -3,15 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGameState } from '@/hooks/useGameState';
 import { useFriends } from '@/hooks/useFriends';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { usePetCollection } from '@/hooks/usePetCollection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   User, Crown, Sparkles, Gem, Zap, Calendar, Trophy, 
   Users, Gift, Send, Check, X, UserPlus, Heart, Star,
-  Clock, Target, Award, Palette
+  Clock, Target, Award, Palette, PawPrint
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import PetSelector, { getPetEmoji } from '@/components/game/PetSelector';
+import PetCollectionStats from '@/components/profile/PetCollectionStats';
 
 const PETS = ['🐕', '🐈', '🐹', '🐰', '🦜'];
 const PET_TYPES = ['dog', 'cat', 'hamster', 'rabbit', 'parrot'];
@@ -20,7 +22,7 @@ const ProfilePage = () => {
   const { profile, refreshProfile } = useGameState();
   const { friends, pendingRequests, receivedGifts, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, sendGift, claimGift, loading } = useFriends(profile?.id);
   const { leaderboard } = useLeaderboard();
-  const [activeSection, setActiveSection] = useState<'stats' | 'friends' | 'gifts'>('stats');
+  const [activeSection, setActiveSection] = useState<'stats' | 'pets' | 'friends' | 'gifts'>('stats');
   const [giftDialog, setGiftDialog] = useState<{ open: boolean; friendId: string; friendName: string }>({ open: false, friendId: '', friendName: '' });
   const [giftAmount, setGiftAmount] = useState('10');
   const [giftType, setGiftType] = useState<'crystals' | 'diamonds'>('crystals');
@@ -58,6 +60,7 @@ const ProfilePage = () => {
 
   const sections = [
     { id: 'stats', label: 'Статистика', icon: Trophy },
+    { id: 'pets', label: 'Питомцы', icon: PawPrint },
     { id: 'friends', label: 'Друзья', icon: Users, badge: pendingRequests.length },
     { id: 'gifts', label: 'Подарки', icon: Gift, badge: receivedGifts.length },
   ];
@@ -233,6 +236,22 @@ const ProfilePage = () => {
                 <p className="font-medium">{memberSince}</p>
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {/* Pets Section */}
+        {activeSection === 'pets' && (
+          <motion.div
+            key="pets"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-3"
+          >
+            <PetCollectionStats 
+              userId={profile.id} 
+              currentPetType={profile.pet_type || 'dog'} 
+            />
           </motion.div>
         )}
 
