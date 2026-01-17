@@ -322,9 +322,7 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
 // Главная страница игры
 const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?: number) => void }) => {
   const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
-  const { allPets, ownedPets, getRarityConfig } = usePetCollection(profile?.id);
-  const { playTap, playCrystal, playChest } = useSoundEffects();
-  const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
+  const { allPets, ownedPets } = usePetCollection(profile?.id);
   const { playTap, playCrystal, playChest } = useSoundEffects();
   const [floatingCrystals, setFloatingCrystals] = useState<{ id: number; x: number; y: number }[]>([]);
   const [crystalId, setCrystalId] = useState(0);
