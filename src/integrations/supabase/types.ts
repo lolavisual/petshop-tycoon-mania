@@ -415,6 +415,89 @@ export type Database = {
         }
         Relationships: []
       }
+      lootbox_openings: {
+        Row: {
+          id: string
+          lootbox_id: string
+          opened_at: string
+          reward_amount: number | null
+          reward_id: string | null
+          reward_type: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          lootbox_id: string
+          opened_at?: string
+          reward_amount?: number | null
+          reward_id?: string | null
+          reward_type: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          lootbox_id?: string
+          opened_at?: string
+          reward_amount?: number | null
+          reward_id?: string | null
+          reward_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lootbox_openings_lootbox_id_fkey"
+            columns: ["lootbox_id"]
+            isOneToOne: false
+            referencedRelation: "lootboxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lootboxes: {
+        Row: {
+          created_at: string
+          description: string | null
+          description_ru: string | null
+          drop_rates: Json
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          name_ru: string
+          price_crystals: number
+          price_diamonds: number
+          rarity: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          drop_rates?: Json
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ru: string
+          price_crystals?: number
+          price_diamonds?: number
+          rarity?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          drop_rates?: Json
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ru?: string
+          price_crystals?: number
+          price_diamonds?: number
+          rarity?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           chat_id: number
@@ -774,6 +857,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ranks: {
+        Row: {
+          badge_url: string | null
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          min_achievements: number
+          min_level: number
+          name: string
+          name_ru: string
+        }
+        Insert: {
+          badge_url?: string | null
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          min_achievements?: number
+          min_level?: number
+          name: string
+          name_ru: string
+        }
+        Update: {
+          badge_url?: string | null
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          min_achievements?: number
+          min_level?: number
+          name?: string
+          name_ru?: string
+        }
+        Relationships: []
+      }
       shop_items: {
         Row: {
           category: string
@@ -828,6 +947,48 @@ export type Database = {
           price_crystals?: number
           price_diamonds?: number
           required_level?: number
+        }
+        Relationships: []
+      }
+      titles: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          description_ru: string | null
+          icon: string
+          id: string
+          name: string
+          name_ru: string
+          rarity: string
+          requirement_type: string
+          requirement_value: number
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          name: string
+          name_ru: string
+          rarity?: string
+          requirement_type: string
+          requirement_value?: number
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          name_ru?: string
+          rarity?: string
+          requirement_type?: string
+          requirement_value?: number
         }
         Relationships: []
       }
@@ -956,6 +1117,38 @@ export type Database = {
           },
         ]
       }
+      user_lootboxes: {
+        Row: {
+          id: string
+          lootbox_id: string
+          obtained_at: string
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          lootbox_id: string
+          obtained_at?: string
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          lootbox_id?: string
+          obtained_at?: string
+          quantity?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_lootboxes_lootbox_id_fkey"
+            columns: ["lootbox_id"]
+            isOneToOne: false
+            referencedRelation: "lootboxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_pets: {
         Row: {
           evolved_at: string | null
@@ -1032,6 +1225,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_titles: {
+        Row: {
+          id: string
+          is_equipped: boolean
+          title_id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_equipped?: boolean
+          title_id: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_equipped?: boolean
+          title_id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_weekly_quests: {
         Row: {

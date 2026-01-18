@@ -5,13 +5,15 @@ import { useGameState } from '@/hooks/useGameState';
 import { useTelegramTheme } from '@/hooks/useTelegramTheme';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { usePetCollection } from '@/hooks/usePetCollection';
-import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3 } from 'lucide-react';
+import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3, Package } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
 import AchievementsPage from '@/components/AchievementsPage';
 import DailyQuestsPage from '@/components/DailyQuestsPage';
 import LeaderboardPage from '@/components/LeaderboardPage';
 import ProfilePage from '@/components/ProfilePage';
+import { TitlesPage } from '@/components/TitlesPage';
+import { LootboxPage } from '@/components/LootboxPage';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyQuests } from '@/hooks/useDailyQuests';
 import { useFriends } from '@/hooks/useFriends';
@@ -509,6 +511,8 @@ const Index = () => {
           {activeTab === 'quests' && <DailyQuestsPage key="quests" userId={profile?.id} />}
           {activeTab === 'achievements' && <AchievementsPage key="achievements" />}
           {activeTab === 'profile' && <ProfilePage key="profile" />}
+          {activeTab === 'titles' && <TitlesPage key="titles" onBack={() => setActiveTab('profile')} />}
+          {activeTab === 'lootbox' && <LootboxPage key="lootbox" onBack={() => setActiveTab('shop')} />}
         </AnimatePresence>
       </main>
 
