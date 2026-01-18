@@ -708,6 +708,39 @@ export type Database = {
         }
         Relationships: []
       }
+      quest_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          notification_type: string
+          quest_id: string | null
+          quest_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          notification_type: string
+          quest_id?: string | null
+          quest_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          notification_type?: string
+          quest_id?: string | null
+          quest_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       quizzes: {
         Row: {
           created_at: string
@@ -999,6 +1032,107 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_weekly_quests: {
+        Row: {
+          claimed_at: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_completed: boolean
+          progress: number
+          quest_id: string
+          reward_claimed: boolean
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          progress?: number
+          quest_id: string
+          reward_claimed?: boolean
+          user_id: string
+          week_start?: string
+        }
+        Update: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          progress?: number
+          quest_id?: string
+          reward_claimed?: boolean
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_weekly_quests_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_quests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_quests: {
+        Row: {
+          created_at: string
+          description: string | null
+          description_ru: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          name_ru: string
+          quest_type: string
+          requirement_type: string
+          requirement_value: number
+          reward_crystals: number
+          reward_diamonds: number
+          reward_xp: number
+          season: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ru: string
+          quest_type?: string
+          requirement_type: string
+          requirement_value?: number
+          reward_crystals?: number
+          reward_diamonds?: number
+          reward_xp?: number
+          season?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ru?: string
+          quest_type?: string
+          requirement_type?: string
+          requirement_value?: number
+          reward_crystals?: number
+          reward_diamonds?: number
+          reward_xp?: number
+          season?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

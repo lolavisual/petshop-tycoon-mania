@@ -4,8 +4,12 @@ import { useDailyQuests } from '@/hooks/useDailyQuests';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Gift, Check, Clock, Sparkles, Gem, Zap, Target, Flame, Star, Trophy, Crown, Swords, Heart } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Gift, Check, Clock, Sparkles, Gem, Zap, Target, Flame, Star, Trophy, Crown, Heart, Calendar, Snowflake } from 'lucide-react';
 import Confetti from '@/components/Confetti';
+import { WeeklyQuestsSection } from '@/components/WeeklyQuestsSection';
+import { QuestNotifications } from '@/components/QuestNotifications';
+import { useWeeklyQuests } from '@/hooks/useWeeklyQuests';
 
 interface DailyQuestsPageProps {
   userId?: string;
@@ -255,9 +259,11 @@ const QuestCard = ({
 };
 
 const DailyQuestsPage = ({ userId }: DailyQuestsPageProps) => {
-  const { userQuests, loading, claiming, claimReward } = useDailyQuests(userId);
+  const { userQuests, loading, claiming, claimReward, unclaimedCount } = useDailyQuests(userId);
+  const { weeklyUnclaimedCount, seasonalUnclaimedCount } = useWeeklyQuests(userId);
   const [showConfetti, setShowConfetti] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('daily');
 
   const handleClaimReward = useCallback(async (userQuestId: string) => {
     try {
@@ -322,12 +328,54 @@ const DailyQuestsPage = ({ userId }: DailyQuestsPageProps) => {
     >
       <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
 
-      {/* Header with Stats */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="glass-card-premium p-4 rounded-2xl"
-      >
+      {/* Header with Notifications */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Target className="w-6 h-6 text-primary" />
+          Квесты
+        </h1>
+        <QuestNotifications userId={userId} />
+      </div>
+
+      {/* Tabs for Quest Types */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="daily" className="relative">
+            <Star className="w-4 h-4 mr-1" />
+            Дневные
+            {unclaimedCount > 0 && (
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                {unclaimedCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="weekly" className="relative">
+            <Calendar className="w-4 h-4 mr-1" />
+            Недельные
+            {weeklyUnclaimedCount > 0 && (
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                {weeklyUnclaimedCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="seasonal" className="relative">
+            <Snowflake className="w-4 h-4 mr-1" />
+            Сезонные
+            {seasonalUnclaimedCount > 0 && (
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                {seasonalUnclaimedCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="daily" className="mt-4 space-y-4">
+          {/* Header with Stats */}
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="glass-card-premium p-4 rounded-2xl"
+          >
         <div className="flex items-center gap-3 mb-3">
           <motion.div 
             className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30"
@@ -479,6 +527,16 @@ const DailyQuestsPage = ({ userId }: DailyQuestsPageProps) => {
           </div>
         </motion.div>
       )}
+        </TabsContent>
+
+        <TabsContent value="weekly" className="mt-4">
+          <WeeklyQuestsSection userId={userId} />
+        </TabsContent>
+
+        <TabsContent value="seasonal" className="mt-4">
+          <WeeklyQuestsSection userId={userId} />
+        </TabsContent>
+      </Tabs>
     </motion.div>
   );
 };
