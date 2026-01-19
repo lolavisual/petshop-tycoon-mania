@@ -30,9 +30,10 @@ interface PetAvatarProps {
   rarity?: 'common' | 'rare' | 'epic' | 'legendary';
   petLevel?: number;
   isTapped?: boolean;
+  comboCount?: number;
 }
 
-const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel = 1, isTapped = false }: PetAvatarProps) => {
+const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel = 1, isTapped = false, comboCount = 0 }: PetAvatarProps) => {
   const pets = ['🐕', '🐈', '🐹', '🐰', '🦜'];
   const petEmojis: Record<string, string> = {
     dog: '🐕', cat: '🐈', hamster: '🐹', rabbit: '🐰', parrot: '🦜',
@@ -41,11 +42,20 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
   };
   const pet = petType ? (petEmojis[petType] || pets[avatarVariant % pets.length]) : pets[avatarVariant % pets.length];
   
+  // Динамическое свечение в зависимости от комбо
+  const getComboGlow = () => {
+    if (comboCount >= 20) return 'drop-shadow-[0_0_40px_rgba(255,0,0,0.8)] drop-shadow-[0_0_60px_rgba(255,165,0,0.6)]';
+    if (comboCount >= 15) return 'drop-shadow-[0_0_35px_rgba(255,100,0,0.7)]';
+    if (comboCount >= 10) return 'drop-shadow-[0_0_30px_rgba(255,200,0,0.6)]';
+    if (comboCount >= 5) return 'drop-shadow-[0_0_20px_rgba(100,200,255,0.5)]';
+    return '';
+  };
+
   const rarityGlow = {
-    common: '',
-    rare: 'drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]',
-    epic: 'drop-shadow-[0_0_20px_rgba(168,85,247,0.6)]',
-    legendary: 'drop-shadow-[0_0_30px_rgba(251,191,36,0.7)]'
+    common: getComboGlow() || '',
+    rare: getComboGlow() || 'drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]',
+    epic: getComboGlow() || 'drop-shadow-[0_0_20px_rgba(168,85,247,0.6)]',
+    legendary: getComboGlow() || 'drop-shadow-[0_0_30px_rgba(251,191,36,0.7)]'
   };
 
   const rarityBadge = {
@@ -54,6 +64,84 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
     epic: { emoji: '💜', label: 'Эпический' },
     legendary: { emoji: '⭐', label: 'Легендарный' }
   };
+
+  // Анимации по редкости
+  const getTapAnimation = () => {
+    switch (rarity) {
+      case 'legendary':
+        // Радужное свечение + мощный прыжок
+        return {
+          y: [0, -40, 0],
+          scale: [1, 1.3, 0.95, 1.15, 1],
+          filter: [
+            'hue-rotate(0deg) brightness(1)',
+            'hue-rotate(60deg) brightness(1.3)',
+            'hue-rotate(120deg) brightness(1.4)',
+            'hue-rotate(180deg) brightness(1.3)',
+            'hue-rotate(0deg) brightness(1)',
+          ],
+        };
+      case 'epic':
+        // Пульсация + качание
+        return {
+          y: [0, -25, 0],
+          scale: [1, 1.25, 0.9, 1.2, 1],
+          rotate: [0, -15, 15, -10, 10, 0],
+        };
+      case 'rare':
+        // Вращение
+        return {
+          y: [0, -20, 0],
+          rotate: [0, 360],
+          scale: [1, 1.15, 1],
+        };
+      default:
+        // Обычный прыжок
+        return {
+          y: [0, -30, 0],
+          scale: [1, 1.1, 0.95, 1],
+        };
+    }
+  };
+
+  const getTapTransition = (): { duration: number; ease: [number, number, number, number] } => {
+    switch (rarity) {
+      case 'legendary':
+        return { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] };
+      case 'epic':
+        return { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] };
+      case 'rare':
+        return { duration: 0.5, ease: [0.42, 0, 0.58, 1] };
+      default:
+        return { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] };
+    }
+  };
+
+  // Эффекты по редкости при тапе
+  const getTapEffects = () => {
+    switch (rarity) {
+      case 'legendary':
+        return ['🌟', '✨', '💫', '⭐', '🔥'];
+      case 'epic':
+        return ['💜', '✨', '💫', '🔮'];
+      case 'rare':
+        return ['💙', '✨', '💎'];
+      default:
+        return ['✨', '💫'];
+    }
+  };
+
+  // Комбо эффекты
+  const getComboEffects = () => {
+    if (comboCount >= 20) return ['🔥', '💥', '⚡', '🌟', '💀'];
+    if (comboCount >= 15) return ['🔥', '⚡', '💥', '🌟'];
+    if (comboCount >= 10) return ['⚡', '🔥', '💫', '✨'];
+    if (comboCount >= 5) return ['💫', '✨', '⭐'];
+    return [];
+  };
+
+  const tapEffects = getTapEffects();
+  const comboEffects = getComboEffects();
   
   return (
     <div className="relative">
@@ -61,6 +149,24 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
       <div className="absolute inset-0 flex items-center justify-center" style={{ width: '200px', height: '200px', left: '-30px', top: '-30px' }}>
         <RarityEffects rarity={rarity} petLevel={petLevel} isActive={rarity !== 'common'} />
       </div>
+
+      {/* Радужный ореол для легендарных */}
+      {rarity === 'legendary' && isTapped && (
+        <motion.div
+          className="absolute inset-0 rounded-full pointer-events-none z-0"
+          style={{
+            width: '150px',
+            height: '150px',
+            left: '-20px',
+            top: '-20px',
+            background: 'conic-gradient(from 0deg, #ff0000, #ff8000, #ffff00, #00ff00, #0080ff, #8000ff, #ff0080, #ff0000)',
+            filter: 'blur(20px)',
+          }}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: [0, 0.7, 0], scale: [0.5, 1.5, 2], rotate: [0, 180] }}
+          transition={{ duration: 0.6 }}
+        />
+      )}
 
       {/* Декоративные элементы */}
       <motion.div 
@@ -80,29 +186,17 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
       
       {/* Питомец с анимациями при тапе */}
       <motion.div 
-        className={`text-8xl select-none relative z-10 ${rarityGlow[rarity]}`}
-        animate={isTapped ? {
-          y: [0, -30, 0],
-          rotate: [0, -10, 10, -5, 5, 0],
-          scale: [1, 1.2, 0.9, 1.1, 1],
-        } : {
-          y: [0, -5, 0],
-        }}
-        transition={isTapped ? {
-          duration: 0.5,
-          ease: 'easeOut',
-        } : {
-          duration: 2,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
+        className={`text-8xl select-none relative z-10 ${comboCount >= 5 ? getComboGlow() : rarityGlow[rarity]}`}
+        animate={isTapped ? getTapAnimation() : { y: [0, -5, 0] }}
+        transition={isTapped ? getTapTransition() : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
       >
         {pet}
         
-        {/* Эффект блеска при тапе */}
+        {/* Эффекты при тапе по редкости */}
         <AnimatePresence>
           {isTapped && (
             <>
+              {/* Центральный эффект */}
               <motion.div
                 className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 initial={{ opacity: 0, scale: 0.5 }}
@@ -110,24 +204,53 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <span className="text-4xl">💫</span>
+                <span className="text-4xl">{tapEffects[0]}</span>
               </motion.div>
-              <motion.div
-                className="absolute -top-4 -left-4 pointer-events-none"
-                initial={{ opacity: 0, y: 0 }}
-                animate={{ opacity: [1, 0], y: -20, x: -10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <span className="text-2xl">✨</span>
-              </motion.div>
-              <motion.div
-                className="absolute -top-4 -right-4 pointer-events-none"
-                initial={{ opacity: 0, y: 0 }}
-                animate={{ opacity: [1, 0], y: -20, x: 10 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
-                <span className="text-2xl">⭐</span>
-              </motion.div>
+              
+              {/* Разлетающиеся эффекты */}
+              {tapEffects.slice(1).map((effect, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                  }}
+                  initial={{ opacity: 0, x: 0, y: 0, scale: 0.5 }}
+                  animate={{ 
+                    opacity: [1, 0], 
+                    x: Math.cos((i * 90 + 45) * Math.PI / 180) * 50,
+                    y: Math.sin((i * 90 + 45) * Math.PI / 180) * 50 - 20,
+                    scale: 1,
+                  }}
+                  transition={{ duration: 0.4, delay: i * 0.05 }}
+                >
+                  <span className="text-xl">{effect}</span>
+                </motion.div>
+              ))}
+
+              {/* Комбо эффекты */}
+              {comboEffects.map((effect, i) => (
+                <motion.div
+                  key={`combo-${i}`}
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                  }}
+                  initial={{ opacity: 0, x: 0, y: 0, scale: 0.3 }}
+                  animate={{ 
+                    opacity: [1, 0], 
+                    x: Math.cos((i * 72) * Math.PI / 180) * 70,
+                    y: Math.sin((i * 72) * Math.PI / 180) * 70 - 30,
+                    scale: 1.2,
+                    rotate: 360,
+                  }}
+                  transition={{ duration: 0.5, delay: 0.1 + i * 0.03 }}
+                >
+                  <span className="text-2xl">{effect}</span>
+                </motion.div>
+              ))}
             </>
           )}
         </AnimatePresence>
@@ -353,8 +476,33 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
   const [floatingCrystals, setFloatingCrystals] = useState<{ id: number; x: number; y: number }[]>([]);
   const [crystalId, setCrystalId] = useState(0);
   const [isPetTapped, setIsPetTapped] = useState(false);
+  
+  // Комбо система
+  const [comboCount, setComboCount] = useState(0);
+  const [comboTimer, setComboTimer] = useState<NodeJS.Timeout | null>(null);
+  const [lastTapTime, setLastTapTime] = useState(0);
+
+  // Получение множителя комбо
+  const getComboMultiplier = () => {
+    if (comboCount >= 20) return 3.0;
+    if (comboCount >= 15) return 2.5;
+    if (comboCount >= 10) return 2.0;
+    if (comboCount >= 5) return 1.5;
+    return 1.0;
+  };
+
+  // Цвет множителя комбо
+  const getComboColor = () => {
+    if (comboCount >= 20) return 'from-red-500 to-orange-500';
+    if (comboCount >= 15) return 'from-orange-500 to-yellow-500';
+    if (comboCount >= 10) return 'from-yellow-500 to-green-500';
+    if (comboCount >= 5) return 'from-blue-400 to-cyan-400';
+    return 'from-primary to-accent';
+  };
 
   const onTap = async () => {
+    const now = Date.now();
+    
     // Звуковые эффекты
     playTap();
     setTimeout(() => playCrystal(), 50);
@@ -362,6 +510,21 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
     // Анимация питомца
     setIsPetTapped(true);
     setTimeout(() => setIsPetTapped(false), 500);
+    
+    // Комбо логика
+    if (now - lastTapTime < 1000) {
+      setComboCount(prev => prev + 1);
+    } else {
+      setComboCount(1);
+    }
+    setLastTapTime(now);
+    
+    // Сброс комбо через 1.5 секунды без тапа
+    if (comboTimer) clearTimeout(comboTimer);
+    const newTimer = setTimeout(() => {
+      setComboCount(0);
+    }, 1500);
+    setComboTimer(newTimer);
     
     const id = crystalId;
     setCrystalId(prev => prev + 1);
@@ -426,6 +589,37 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
         xpNext={xpForNextLevel(profile.level)}
       />
       
+      {/* Индикатор комбо */}
+      <AnimatePresence>
+        {comboCount >= 3 && (
+          <motion.div
+            className="flex justify-center"
+            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.8 }}
+          >
+            <motion.div
+              className={`px-4 py-2 rounded-2xl bg-gradient-to-r ${getComboColor()} text-white font-bold shadow-lg`}
+              animate={{ 
+                scale: [1, 1.05, 1],
+                boxShadow: comboCount >= 10 
+                  ? ['0 0 20px rgba(255,200,0,0.5)', '0 0 40px rgba(255,200,0,0.8)', '0 0 20px rgba(255,200,0,0.5)']
+                  : undefined
+              }}
+              transition={{ duration: 0.3, repeat: Infinity }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">
+                  {comboCount >= 20 ? '🔥💀🔥' : comboCount >= 15 ? '🔥⚡🔥' : comboCount >= 10 ? '⚡🔥' : comboCount >= 5 ? '🔥' : '✨'}
+                </span>
+                <span>COMBO x{comboCount}</span>
+                <span className="text-xs opacity-80">({getComboMultiplier()}x)</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Питомец и зона тапа */}
       <div className="flex flex-col items-center justify-center py-8 space-y-4">
         {(() => {
@@ -439,6 +633,7 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
               rarity={(currentPet?.rarity as 'common' | 'rare' | 'epic' | 'legendary') || 'common'}
               petLevel={userPet?.pet_level || 1}
               isTapped={isPetTapped}
+              comboCount={comboCount}
             />
           );
         })()}
