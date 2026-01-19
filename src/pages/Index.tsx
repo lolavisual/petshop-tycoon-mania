@@ -29,9 +29,10 @@ interface PetAvatarProps {
   petType?: string;
   rarity?: 'common' | 'rare' | 'epic' | 'legendary';
   petLevel?: number;
+  isTapped?: boolean;
 }
 
-const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel = 1 }: PetAvatarProps) => {
+const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel = 1, isTapped = false }: PetAvatarProps) => {
   const pets = ['🐕', '🐈', '🐹', '🐰', '🦜'];
   const petEmojis: Record<string, string> = {
     dog: '🐕', cat: '🐈', hamster: '🐹', rabbit: '🐰', parrot: '🦜',
@@ -61,13 +62,13 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
         <RarityEffects rarity={rarity} petLevel={petLevel} isActive={rarity !== 'common'} />
       </div>
 
-      {/* Новогодние украшения вокруг питомца */}
+      {/* Декоративные элементы */}
       <motion.div 
         className="absolute -top-12 -left-8 text-2xl z-10"
         animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
         transition={{ duration: 3, repeat: Infinity }}
       >
-        ❄️
+        ✨
       </motion.div>
       <motion.div 
         className="absolute -top-10 -right-8 text-2xl z-10"
@@ -76,30 +77,60 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
       >
         ⭐
       </motion.div>
-      <motion.div 
-        className="absolute top-0 -left-12 text-xl z-10"
-        animate={{ y: [0, -5, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-      >
-        🎄
-      </motion.div>
-      <motion.div 
-        className="absolute top-0 -right-12 text-xl z-10"
-        animate={{ y: [0, -5, 0] }}
-        transition={{ duration: 2.2, repeat: Infinity, delay: 0.3 }}
-      >
-        🎁
-      </motion.div>
       
-      
-      {/* Питомец с эффектом свечения редкости */}
+      {/* Питомец с анимациями при тапе */}
       <motion.div 
         className={`text-8xl select-none relative z-10 ${rarityGlow[rarity]}`}
-        whileTap={{ scale: 0.9 }}
-        animate={{ y: [0, -5, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        animate={isTapped ? {
+          y: [0, -30, 0],
+          rotate: [0, -10, 10, -5, 5, 0],
+          scale: [1, 1.2, 0.9, 1.1, 1],
+        } : {
+          y: [0, -5, 0],
+        }}
+        transition={isTapped ? {
+          duration: 0.5,
+          ease: 'easeOut',
+        } : {
+          duration: 2,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
       >
         {pet}
+        
+        {/* Эффект блеска при тапе */}
+        <AnimatePresence>
+          {isTapped && (
+            <>
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: [0, 1, 0], scale: [0.5, 1.5, 2] }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <span className="text-4xl">💫</span>
+              </motion.div>
+              <motion.div
+                className="absolute -top-4 -left-4 pointer-events-none"
+                initial={{ opacity: 0, y: 0 }}
+                animate={{ opacity: [1, 0], y: -20, x: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <span className="text-2xl">✨</span>
+              </motion.div>
+              <motion.div
+                className="absolute -top-4 -right-4 pointer-events-none"
+                initial={{ opacity: 0, y: 0 }}
+                animate={{ opacity: [1, 0], y: -20, x: 10 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+              >
+                <span className="text-2xl">⭐</span>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </motion.div>
       
       {/* Бейдж редкости */}
@@ -128,15 +159,15 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
         </motion.div>
       )}
       
-      {/* Снежинки внизу */}
+      {/* Декор внизу */}
       <motion.div 
         className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2 text-lg z-10"
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
-        <span>❄️</span>
+        <span>💎</span>
         <span>✨</span>
-        <span>❄️</span>
+        <span>💎</span>
       </motion.div>
     </div>
   );
@@ -321,11 +352,16 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
   const { playTap, playCrystal, playChest } = useSoundEffects();
   const [floatingCrystals, setFloatingCrystals] = useState<{ id: number; x: number; y: number }[]>([]);
   const [crystalId, setCrystalId] = useState(0);
+  const [isPetTapped, setIsPetTapped] = useState(false);
 
   const onTap = async () => {
     // Звуковые эффекты
     playTap();
     setTimeout(() => playCrystal(), 50);
+    
+    // Анимация питомца
+    setIsPetTapped(true);
+    setTimeout(() => setIsPetTapped(false), 500);
     
     const id = crystalId;
     setCrystalId(prev => prev + 1);
@@ -402,6 +438,7 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
               petType={profile.pet_type}
               rarity={(currentPet?.rarity as 'common' | 'rare' | 'epic' | 'legendary') || 'common'}
               petLevel={userPet?.pet_level || 1}
+              isTapped={isPetTapped}
             />
           );
         })()}
