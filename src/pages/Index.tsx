@@ -20,6 +20,7 @@ import { useFriends } from '@/hooks/useFriends';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import FloatingParticles from '@/components/game/FloatingParticles';
 import RarityEffects from '@/components/game/RarityEffects';
+import ChaoticPets from '@/components/game/ChaoticPets';
 import { OnboardingOverlay } from '@/components/OnboardingOverlay';
 import { DemoBanner } from '@/components/DemoBanner';
 // Компонент питомца с эффектами редкости
@@ -296,49 +297,7 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
   );
 };
 
-// Компонент тап-зоны с эффектами
-const TapZone = ({ onTap, crystals }: { onTap: () => void; crystals: { id: number; x: number; y: number }[] }) => {
-  const handleTap = () => {
-    hapticImpact('medium');
-    onTap();
-  };
-
-  return (
-    <motion.button
-      type="button"
-      className="tap-zone relative w-48 h-48 rounded-full flex items-center justify-center cursor-pointer touch-manipulation"
-      style={{
-        background: 'radial-gradient(circle, hsl(var(--primary) / 0.2) 0%, transparent 70%)'
-      }}
-      whileTap={{ scale: 0.95 }}
-      onClick={handleTap}
-      onTouchStart={(e) => {
-        e.preventDefault();
-        handleTap();
-      }}
-    >
-      <div className="absolute inset-0 rounded-full border-4 border-dashed border-primary/30 animate-spin pointer-events-none" style={{ animationDuration: '20s' }} />
-      
-      <AnimatePresence>
-        {crystals.map(crystal => (
-          <motion.div
-            key={crystal.id}
-            className="absolute text-2xl pointer-events-none"
-            style={{ left: crystal.x, top: crystal.y }}
-            initial={{ opacity: 1, y: 0, scale: 1 }}
-            animate={{ opacity: 0, y: -60, scale: 0.5 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            💎
-          </motion.div>
-        ))}
-      </AnimatePresence>
-      
-      <span className="text-lg font-bold text-primary pointer-events-none">Тапай!</span>
-    </motion.button>
-  );
-};
+// TapZone removed - using ChaoticPets instead
 
 // Навигация - Enhanced
 const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements, unclaimedQuests, unclaimedGifts }: { activeTab: string; setActiveTab: (tab: string) => void; unclaimedAchievements: number; unclaimedQuests: number; unclaimedGifts: number }) => {
@@ -471,11 +430,9 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
 // Главная страница игры
 const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?: number) => void }) => {
   const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
-  const { allPets, ownedPets } = usePetCollection(profile?.id);
   const { playTap, playCrystal, playChest } = useSoundEffects();
-  const [floatingCrystals, setFloatingCrystals] = useState<{ id: number; x: number; y: number }[]>([]);
-  const [crystalId, setCrystalId] = useState(0);
-  const [isPetTapped, setIsPetTapped] = useState(false);
+  
+  // Комбо система
   
   // Комбо система
   const [comboCount, setComboCount] = useState(0);
@@ -507,10 +464,6 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
     playTap();
     setTimeout(() => playCrystal(), 50);
     
-    // Анимация питомца
-    setIsPetTapped(true);
-    setTimeout(() => setIsPetTapped(false), 500);
-    
     // Комбо логика
     if (now - lastTapTime < 1000) {
       setComboCount(prev => prev + 1);
@@ -525,17 +478,6 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
       setComboCount(0);
     }, 1500);
     setComboTimer(newTimer);
-    
-    const id = crystalId;
-    setCrystalId(prev => prev + 1);
-    
-    const x = 70 + Math.random() * 60;
-    const y = 70 + Math.random() * 60;
-    setFloatingCrystals(prev => [...prev, { id, x, y }]);
-    
-    setTimeout(() => {
-      setFloatingCrystals(prev => prev.filter(c => c.id !== id));
-    }, 700);
     
     const result = await handleClick();
     
@@ -620,25 +562,8 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
         )}
       </AnimatePresence>
 
-      {/* Питомец и зона тапа */}
-      <div className="flex flex-col items-center justify-center py-8 space-y-4">
-        {(() => {
-          const currentPet = allPets.find(p => p.type === profile.pet_type);
-          const userPet = ownedPets.get(profile.pet_type || 'dog');
-          return (
-            <PetAvatar 
-              level={profile.level} 
-              avatarVariant={profile.avatar_variant}
-              petType={profile.pet_type}
-              rarity={(currentPet?.rarity as 'common' | 'rare' | 'epic' | 'legendary') || 'common'}
-              petLevel={userPet?.pet_level || 1}
-              isTapped={isPetTapped}
-              comboCount={comboCount}
-            />
-          );
-        })()}
-        <TapZone onTap={onTap} crystals={floatingCrystals} />
-      </div>
+      {/* Хаотичные питомцы */}
+      <ChaoticPets onTap={onTap} comboCount={comboCount} />
       
       <button
         type="button"
