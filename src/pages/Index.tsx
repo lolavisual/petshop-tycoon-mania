@@ -91,15 +91,6 @@ const PetAvatar = ({ level, avatarVariant, petType, rarity = 'common', petLevel 
         🎁
       </motion.div>
       
-      {/* Шапка Санты (красная шапочка) */}
-      <motion.div 
-        className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 text-3xl"
-        initial={{ y: -50, opacity: 0, rotate: -30 }}
-        animate={{ y: 0, opacity: 1, rotate: 15 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-      >
-        🧢
-      </motion.div>
       
       {/* Питомец с эффектом свечения редкости */}
       <motion.div 
