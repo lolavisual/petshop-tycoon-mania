@@ -85,6 +85,15 @@ export function getTelegramWebApp(): TelegramWebApp | null {
   return null;
 }
 
+function safeWebAppCall(fn: () => void) {
+  try {
+    fn();
+  } catch (e) {
+    // Не ломаем UI из-за ограничений/версии Telegram WebApp SDK
+    console.warn('[Telegram.WebApp] call failed (ignored)', e);
+  }
+}
+
 // Проверка, запущено ли в Telegram
 export function isTelegramWebApp(): boolean {
   return getTelegramWebApp() !== null;
@@ -102,61 +111,58 @@ export function getTelegramUser() {
   return webApp?.initDataUnsafe?.user || null;
 }
 
-// Haptic feedback
+// Haptic feedback (никогда не должен ломать клики)
 export function hapticImpact(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' = 'medium') {
   const webApp = getTelegramWebApp();
-  if (webApp?.HapticFeedback) {
-    webApp.HapticFeedback.impactOccurred(style);
-  }
+  if (!webApp?.HapticFeedback?.impactOccurred) return;
+  safeWebAppCall(() => webApp.HapticFeedback.impactOccurred(style));
 }
 
 export function hapticNotification(type: 'error' | 'success' | 'warning') {
   const webApp = getTelegramWebApp();
-  if (webApp?.HapticFeedback) {
-    webApp.HapticFeedback.notificationOccurred(type);
-  }
+  if (!webApp?.HapticFeedback?.notificationOccurred) return;
+  safeWebAppCall(() => webApp.HapticFeedback.notificationOccurred(type));
 }
 
 export function hapticSelection() {
   const webApp = getTelegramWebApp();
-  if (webApp?.HapticFeedback) {
-    webApp.HapticFeedback.selectionChanged();
-  }
+  if (!webApp?.HapticFeedback?.selectionChanged) return;
+  safeWebAppCall(() => webApp.HapticFeedback.selectionChanged());
 }
 
 // Инициализация WebApp
 export function initTelegramWebApp() {
   const webApp = getTelegramWebApp();
   if (webApp) {
-    webApp.ready();
-    webApp.expand();
-    webApp.enableClosingConfirmation();
-    
+    safeWebAppCall(() => webApp.ready());
+    safeWebAppCall(() => webApp.expand());
+    safeWebAppCall(() => webApp.enableClosingConfirmation());
+
     // Применяем тему Telegram к HTML
     const isDark = webApp.colorScheme === 'dark';
     const root = document.documentElement;
-    
+
     if (isDark) {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
-    
+
     // Устанавливаем цвета темы в зависимости от темы Telegram
     const headerColor = isDark ? '#1a1a1e' : '#FFF5EB';
     const bgColor = isDark ? '#141418' : '#FFF5EB';
-    
-    webApp.setHeaderColor(headerColor);
-    webApp.setBackgroundColor(bgColor);
-    
+
+    safeWebAppCall(() => webApp.setHeaderColor(headerColor));
+    safeWebAppCall(() => webApp.setBackgroundColor(bgColor));
+
     // Скрываем кнопку "Назад" по умолчанию
-    webApp.BackButton.hide();
-    
+    safeWebAppCall(() => webApp.BackButton?.hide());
+
     console.log('Telegram WebApp initialized:', {
       version: webApp.version,
       platform: webApp.platform,
       colorScheme: webApp.colorScheme,
-      viewportHeight: webApp.viewportHeight
+      viewportHeight: webApp.viewportHeight,
     });
   }
 }
