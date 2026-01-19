@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePetProducts, CategoryType, categoryLabels, isNewProduct, isHitProduct } from '@/hooks/usePetProducts';
 import { usePromotions } from '@/hooks/usePromotions';
+import { useGameState } from '@/hooks/useGameState';
 import PromotionsBanner from './PromotionsBanner';
 import { hapticImpact } from '@/lib/telegram';
-import { ShoppingCart, Send, RefreshCw, Heart, Sparkles, Flame, Package, PackageX, Percent } from 'lucide-react';
+import { ShoppingCart, Send, RefreshCw, Heart, Sparkles, Flame, Package, PackageX, Percent, Gift, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Локальное хранилище избранного
 const FAVORITES_KEY = 'petshop_favorites';
@@ -21,7 +23,11 @@ const saveFavorites = (favorites: string[]) => {
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
 };
 
-const PetShopPage = () => {
+interface PetShopPageProps {
+  setCurrentPage?: (page: string) => void;
+}
+
+const PetShopPage = ({ setCurrentPage }: PetShopPageProps) => {
   const {
     products,
     loading,
@@ -106,6 +112,41 @@ const PetShopPage = () => {
           Товары для ваших питомцев
         </p>
       </div>
+
+      {/* Lootbox Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card-premium p-4 rounded-2xl cursor-pointer hover:scale-[1.02] transition-transform"
+        onClick={() => {
+          hapticImpact('medium');
+          setCurrentPage?.('lootbox');
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <motion.div
+              animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-4xl"
+            >
+              🎁
+            </motion.div>
+            <div>
+              <h3 className="font-bold text-foreground">Лутбоксы</h3>
+              <p className="text-xs text-muted-foreground">
+                Открывай сундуки и получай редких питомцев!
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+              НОВИНКА
+            </span>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </div>
+        </div>
+      </motion.div>
 
       {/* Активные акции */}
       {promotions.length > 0 && (
