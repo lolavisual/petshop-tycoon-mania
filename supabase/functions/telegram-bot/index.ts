@@ -311,6 +311,35 @@ serve(async (req) => {
   try {
     const body = await req.json();
     
+    // Setup webhook action
+    if (body.action === 'setup_webhook') {
+      console.log('Setting up Telegram webhook');
+      const webhookUrl = `https://jtyqkppcieujjycqlkco.supabase.co/functions/v1/telegram-bot`;
+      
+      const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: webhookUrl }),
+      });
+      
+      const result = await response.json();
+      console.log('Webhook setup result:', result);
+      
+      return new Response(JSON.stringify({ success: true, result, webhookUrl }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Get webhook info action
+    if (body.action === 'get_webhook_info') {
+      const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo`);
+      const result = await response.json();
+      
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     // Check if this is a broadcast request from admin
     if (body.action === 'broadcast' && body.broadcastId) {
       console.log('Processing broadcast request');
