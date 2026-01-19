@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { initTelegramWebApp, hapticImpact } from '@/lib/telegram';
+import { initTelegramWebApp, hapticImpact, isTelegramWebApp } from '@/lib/telegram';
 import { useGameState } from '@/hooks/useGameState';
 import { useTelegramTheme } from '@/hooks/useTelegramTheme';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
@@ -20,6 +20,8 @@ import { useFriends } from '@/hooks/useFriends';
 import { ParallaxBackground } from '@/components/ParallaxBackground';
 import FloatingParticles from '@/components/game/FloatingParticles';
 import RarityEffects from '@/components/game/RarityEffects';
+import { OnboardingOverlay } from '@/components/OnboardingOverlay';
+import { DemoBanner } from '@/components/DemoBanner';
 // Компонент питомца с эффектами редкости
 interface PetAvatarProps {
   level: number;
@@ -446,6 +448,11 @@ const Index = () => {
   const { unclaimedCount } = useAchievements();
   const { unclaimedCount: unclaimedQuestsCount, updateQuestProgress } = useDailyQuests(profile?.id);
   const { unclaimedGiftsCount } = useFriends(profile?.id);
+  
+  // Демо-режим и онбординг
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const isInTelegram = isTelegramWebApp();
+  const isDemoMode = !isInTelegram && profile?.id === 'dev-user';
 
   useEffect(() => {
     initTelegramWebApp();
@@ -466,8 +473,20 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24 relative">
+    <div className={`min-h-screen pb-24 relative ${isDemoMode ? 'pt-16' : ''}`}>
       <ParallaxBackground />
+      
+      {/* Демо баннер */}
+      {isDemoMode && (
+        <DemoBanner onShowOnboarding={() => setShowOnboarding(true)} />
+      )}
+      
+      {/* Онбординг */}
+      <OnboardingOverlay 
+        onComplete={() => setShowOnboarding(false)} 
+        forceShow={showOnboarding}
+      />
+      
       <header className="p-4 flex items-center justify-between relative z-10">
         <h1 className="text-2xl font-black text-gradient-primary">PetShop Tycoon</h1>
         <div className="flex items-center gap-2">
