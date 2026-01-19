@@ -4,7 +4,7 @@ import { useAdmin, AdminStats, AdminUser, AdminArticle } from '@/hooks/useAdmin'
 import { 
   Shield, Users, FileText, BarChart3, Send, Ban, 
   CheckCircle, XCircle, Search, ChevronLeft, ChevronRight,
-  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target, PawPrint
+  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target, PawPrint, Bot
 } from 'lucide-react';
 import ProductsAdminTab from '@/components/ProductsAdminTab';
 import PromotionsAdminTab from '@/components/admin/PromotionsAdminTab';
@@ -13,11 +13,12 @@ import QuestsAdminTab from '@/components/admin/QuestsAdminTab';
 import BroadcastsAdminTab from '@/components/admin/BroadcastsAdminTab';
 import OrdersAdminTab from '@/components/admin/OrdersAdminTab';
 import PetsAdminTab from '@/components/admin/PetsAdminTab';
+import BotAnalyticsTab from '@/components/admin/BotAnalyticsTab';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders' | 'pets';
+type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders' | 'pets' | 'bot-analytics';
 
 const AdminPage = () => {
   const [adminSecret, setAdminSecret] = useState('');
@@ -240,6 +241,7 @@ const AdminPage = () => {
         {[
           { id: 'stats', icon: BarChart3, label: 'Статистика' },
           { id: 'orders', icon: ShoppingCart, label: 'Заказы' },
+          { id: 'bot-analytics', icon: Bot, label: 'Бот' },
           { id: 'users', icon: Users, label: 'Пользователи' },
           { id: 'articles', icon: FileText, label: 'Статьи' },
           { id: 'products', icon: Package, label: 'Товары' },
@@ -581,6 +583,11 @@ const AdminPage = () => {
           {/* Заказы */}
           {activeTab === 'orders' && (
             <OrdersAdminTab />
+          )}
+
+          {/* Аналитика бота */}
+          {activeTab === 'bot-analytics' && (
+            <BotAnalyticsTab />
           )}
         </AnimatePresence>
       </div>

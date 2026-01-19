@@ -170,8 +170,45 @@ async function sendTelegramMessage(chatId: number, text: string, replyMarkup?: a
   return result;
 }
 
-async function getAIResponse(userMessage: string, userName: string): Promise<string> {
+// Get conversation history for context
+async function getConversationHistory(telegramId: number, limit: number = 10): Promise<{ role: string; content: string }[]> {
   try {
+    const { data: logs, error } = await supabase
+      .from('bot_message_logs')
+      .select('user_message, bot_response')
+      .eq('telegram_id', telegramId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error || !logs) return [];
+
+    // Reverse to get chronological order and format for AI
+    const history: { role: string; content: string }[] = [];
+    logs.reverse().forEach(log => {
+      history.push({ role: 'user', content: log.user_message });
+      history.push({ role: 'assistant', content: log.bot_response });
+    });
+
+    return history;
+  } catch (err) {
+    console.error('Error fetching conversation history:', err);
+    return [];
+  }
+}
+
+async function getAIResponse(userMessage: string, userName: string, telegramId: number): Promise<string> {
+  try {
+    // Get conversation history for context
+    const conversationHistory = await getConversationHistory(telegramId, 5);
+    
+    const messages = [
+      { role: 'system', content: PET_ASSISTANT_PROMPT },
+      ...conversationHistory,
+      { role: 'user', content: `Пользователь ${userName} пишет: ${userMessage}` }
+    ];
+
+    console.log(`Sending ${messages.length} messages to AI for user ${telegramId}`);
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -180,10 +217,7 @@ async function getAIResponse(userMessage: string, userName: string): Promise<str
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: PET_ASSISTANT_PROMPT },
-          { role: 'user', content: `Пользователь ${userName} пишет: ${userMessage}` }
-        ],
+        messages,
         max_tokens: 500,
         temperature: 0.8,
       }),
@@ -589,7 +623,7 @@ ${orderId ? `\n🔢 <b>ID:</b> <code>${orderId.slice(0, 8)}</code>` : ''}
       body: JSON.stringify({ chat_id: chatId, action: 'typing' }),
     });
 
-    const aiResponse = await getAIResponse(text, userName);
+    const aiResponse = await getAIResponse(text, userName, telegramId);
     
     // Add shop button occasionally
     const showShopButton = Math.random() > 0.7; // 30% chance
