@@ -507,10 +507,10 @@ const Index = () => {
       <main className="relative z-10">
         <AnimatePresence mode="wait">
           {activeTab === 'game' && <GamePage key="game" onQuestProgress={updateQuestProgress} />}
-          {activeTab === 'shop' && <ShopPage key="shop" />}
+          {activeTab === 'shop' && <ShopPage key="shop" setCurrentPage={setActiveTab} />}
           {activeTab === 'quests' && <DailyQuestsPage key="quests" userId={profile?.id} />}
           {activeTab === 'achievements' && <AchievementsPage key="achievements" />}
-          {activeTab === 'profile' && <ProfilePage key="profile" />}
+          {activeTab === 'profile' && <ProfilePage key="profile" setCurrentPage={setActiveTab} />}
           {activeTab === 'titles' && <TitlesPage key="titles" onBack={() => setActiveTab('profile')} />}
           {activeTab === 'lootbox' && <LootboxPage key="lootbox" onBack={() => setActiveTab('shop')} />}
         </AnimatePresence>

@@ -9,25 +9,33 @@ import { Input } from '@/components/ui/input';
 import { 
   User, Crown, Sparkles, Gem, Zap, Calendar, Trophy, 
   Users, Gift, Send, Check, X, UserPlus, Heart, Star,
-  Clock, Target, Award, Palette, PawPrint
+  Clock, Target, Award, Palette, PawPrint, Medal, ChevronRight
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import PetSelector, { getPetEmoji } from '@/components/game/PetSelector';
+import { useRanks } from '@/hooks/useRanks';
 import PetCollectionStats from '@/components/profile/PetCollectionStats';
+
+interface ProfilePageProps {
+  setCurrentPage?: (page: string) => void;
+}
 
 const PETS = ['🐕', '🐈', '🐹', '🐰', '🦜'];
 const PET_TYPES = ['dog', 'cat', 'hamster', 'rabbit', 'parrot'];
 
-const ProfilePage = () => {
+const ProfilePage = ({ setCurrentPage }: ProfilePageProps) => {
   const { profile, refreshProfile } = useGameState();
   const { friends, pendingRequests, receivedGifts, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, sendGift, claimGift, loading } = useFriends(profile?.id);
   const { leaderboard } = useLeaderboard();
+  const { getCurrentRank } = useRanks();
   const [activeSection, setActiveSection] = useState<'stats' | 'pets' | 'friends' | 'gifts'>('stats');
   const [giftDialog, setGiftDialog] = useState<{ open: boolean; friendId: string; friendName: string }>({ open: false, friendId: '', friendName: '' });
   const [giftAmount, setGiftAmount] = useState('10');
   const [giftType, setGiftType] = useState<'crystals' | 'diamonds'>('crystals');
   const [sendingGift, setSendingGift] = useState(false);
   const [showPetSelector, setShowPetSelector] = useState(false);
+
+  const currentRank = getCurrentRank();
 
   if (!profile) {
     return (
@@ -113,16 +121,43 @@ const ProfilePage = () => {
             <span className="font-bold">Уровень {profile.level}</span>
           </div>
           
-          {/* Change Pet Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-3"
-            onClick={() => setShowPetSelector(true)}
-          >
-            <Palette className="w-4 h-4 mr-2" />
-            Сменить питомца
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2 mt-3 justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPetSelector(true)}
+            >
+              <Palette className="w-4 h-4 mr-2" />
+              Питомцы
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage?.('titles')}
+              className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20"
+            >
+              <Medal className="w-4 h-4 mr-2" />
+              Ранги и титулы
+            </Button>
+          </div>
+
+          {/* Current Rank Display */}
+          {currentRank && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card cursor-pointer hover:bg-muted/50 transition-all"
+              onClick={() => setCurrentPage?.('titles')}
+              style={{ borderColor: currentRank.color }}
+            >
+              <span className="text-lg">{currentRank.icon}</span>
+              <span className="font-medium" style={{ color: currentRank.color }}>
+                {currentRank.name_ru}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </motion.div>
+          )}
         </div>
       </motion.div>
 
