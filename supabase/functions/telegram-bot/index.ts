@@ -450,7 +450,7 @@ serve(async (req) => {
 
       const keyboard = {
         inline_keyboard: [
-          [{ text: '🛒 Открыть магазин', web_app: { url: 'https://jtyqkppcieujjycqlkco.lovableproject.com' } }],
+          [{ text: '🛒 Открыть магазин', web_app: { url: 'https://petshoptycoon.lovable.app' } }],
           [{ text: '💬 Поболтаем о питомцах!', callback_data: 'chat_about_pets' }]
         ]
       };
@@ -474,7 +474,7 @@ serve(async (req) => {
 
       const keyboard = {
         inline_keyboard: [
-          [{ text: '🛒 Открыть магазин', web_app: { url: 'https://jtyqkppcieujjycqlkco.lovableproject.com' } }]
+          [{ text: '🛒 Открыть магазин', web_app: { url: 'https://petshoptycoon.lovable.app' } }]
         ]
       };
 
@@ -569,7 +569,7 @@ ${orderId ? `\n🔢 <b>Номер заказа:</b> <code>${orderId.slice(0, 8)}
 
       const keyboard = {
         inline_keyboard: [
-          [{ text: '🛒 Вернуться в магазин', web_app: { url: 'https://jtyqkppcieujjycqlkco.lovableproject.com' } }]
+          [{ text: '🛒 Вернуться в магазин', web_app: { url: 'https://petshoptycoon.lovable.app' } }]
         ]
       };
 
@@ -592,7 +592,7 @@ ${orderId ? `\n🔢 <b>ID:</b> <code>${orderId.slice(0, 8)}</code>` : ''}
         const managerKeyboard = {
           inline_keyboard: [
             [{ text: '💬 Написать клиенту', url: `tg://user?id=${telegramId}` }],
-            [{ text: '📋 Открыть заказы', url: 'https://jtyqkppcieujjycqlkco.lovableproject.com/admin' }]
+            [{ text: '📋 Открыть заказы', url: 'https://petshoptycoon.lovable.app/admin' }]
           ]
         };
 
@@ -629,7 +629,7 @@ ${orderId ? `\n🔢 <b>ID:</b> <code>${orderId.slice(0, 8)}</code>` : ''}
     const showShopButton = Math.random() > 0.7; // 30% chance
     const keyboard = showShopButton ? {
       inline_keyboard: [
-        [{ text: '🛒 Заглянуть в магазин', web_app: { url: 'https://jtyqkppcieujjycqlkco.lovableproject.com' } }]
+        [{ text: '🛒 Заглянуть в магазин', web_app: { url: 'https://petshoptycoon.lovable.app' } }]
       ]
     } : undefined;
 
