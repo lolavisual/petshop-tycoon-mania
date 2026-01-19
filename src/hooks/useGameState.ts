@@ -112,24 +112,14 @@ export function useGameState() {
   // Загрузка профиля
   const loadProfile = useCallback(async () => {
     try {
-      // В DEV режиме без Telegram используем мок-данные
-      if (import.meta.env.DEV && !isTelegram) {
-        console.log('DEV режим: используем мок-профиль');
+      // Проверяем авторизацию
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Без авторизации используем мок-профиль для демо
+        console.log('Нет авторизации: используем мок-профиль для демо');
         setProfile(DEV_MOCK_PROFILE);
         setAccessories([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        // В DEV режиме всё равно показываем мок
-        if (import.meta.env.DEV) {
-          setProfile(DEV_MOCK_PROFILE);
-          setLoading(false);
-          return;
-        }
-        setError('Пользователь не авторизован');
         setLoading(false);
         return;
       }
@@ -142,13 +132,10 @@ export function useGameState() {
 
       if (profileError) {
         console.error('Ошибка загрузки профиля:', profileError);
-        // В DEV режиме используем мок при ошибке
-        if (import.meta.env.DEV) {
-          setProfile(DEV_MOCK_PROFILE);
-          setLoading(false);
-          return;
-        }
-        setError('Не удалось загрузить профиль');
+        // Используем мок при ошибке
+        console.log('Ошибка загрузки: используем мок-профиль');
+        setProfile(DEV_MOCK_PROFILE);
+        setLoading(false);
         return;
       }
 
@@ -180,13 +167,9 @@ export function useGameState() {
       }
     } catch (err) {
       console.error('Ошибка:', err);
-      // В DEV режиме используем мок при любой ошибке
-      if (import.meta.env.DEV) {
-        setProfile(DEV_MOCK_PROFILE);
-        setLoading(false);
-        return;
-      }
-      setError('Произошла ошибка');
+      // Используем мок при любой ошибке для демо-режима
+      console.log('Ошибка сети: используем мок-профиль');
+      setProfile(DEV_MOCK_PROFILE);
     } finally {
       setLoading(false);
     }
@@ -199,8 +182,10 @@ export function useGameState() {
     setIsClicking(true);
     hapticImpact('medium');
 
-    // В DEV режиме без Telegram - локальный мок клика
-    if (import.meta.env.DEV && !isTelegram) {
+    // Если профиль мок (id = 'dev-user') - локальный клик
+    const isDemo = profile?.id === 'dev-user';
+    
+    if (isDemo) {
       const xpEarned = 0.5;
       const crystalsEarned = 1;
       
@@ -289,8 +274,10 @@ export function useGameState() {
   const claimChest = useCallback(async (): Promise<ChestResult | null> => {
     hapticImpact('heavy');
 
-    // В DEV режиме без Telegram - локальный мок сундука
-    if (import.meta.env.DEV && !isTelegram) {
+    // Если профиль мок (id = 'dev-user') - локальный сундук
+    const isDemo = profile?.id === 'dev-user';
+    
+    if (isDemo) {
       const crystalsEarned = 50 + Math.floor(Math.random() * 100);
       const stonesEarned = Math.random() > 0.7 ? Math.floor(Math.random() * 5) + 1 : 0;
       const newStreak = (profile?.streak_days || 0) + 1;
