@@ -202,6 +202,35 @@ async function getAIResponse(userMessage: string, userName: string): Promise<str
   }
 }
 
+// Log message to database for analytics
+async function logBotMessage(
+  telegramId: number,
+  chatId: number,
+  username: string | null,
+  firstName: string | null,
+  userMessage: string,
+  botResponse: string,
+  responseTimeMs: number,
+  isCommand: boolean = false,
+  commandType: string | null = null
+) {
+  try {
+    await supabase.from('bot_message_logs').insert({
+      telegram_id: telegramId,
+      chat_id: chatId,
+      username,
+      first_name: firstName,
+      user_message: userMessage,
+      bot_response: botResponse,
+      response_time_ms: responseTimeMs,
+      is_command: isCommand,
+      command_type: commandType,
+    });
+  } catch (error) {
+    console.error('Error logging message:', error);
+  }
+}
+
 // Send broadcast to all active subscribers
 async function sendBroadcast(broadcastId: string): Promise<{ sent: number; failed: number }> {
   console.log(`Starting broadcast ${broadcastId}`);
@@ -370,6 +399,7 @@ serve(async (req) => {
 
     // Handle /start command
     if (text === '/start') {
+      const startTime = Date.now();
       const welcomeMessage = `🐾 <b>Привет, ${userName}!</b>
 
 Я — помощник зоомагазина PetShop! 
@@ -392,6 +422,10 @@ serve(async (req) => {
       };
 
       await sendTelegramMessage(chatId, welcomeMessage, keyboard);
+      
+      // Log command
+      await logBotMessage(telegramId, chatId, username, userName, text, welcomeMessage, Date.now() - startTime, true, 'start');
+      
       return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -399,6 +433,7 @@ serve(async (req) => {
 
     // Handle /shop command
     if (text === '/shop' || text === '/магазин') {
+      const startTime = Date.now();
       const shopMessage = `🛒 <b>Добро пожаловать в PetShop!</b>
 
 Нажми кнопку ниже, чтобы открыть магазин 👇`;
@@ -410,6 +445,10 @@ serve(async (req) => {
       };
 
       await sendTelegramMessage(chatId, shopMessage, keyboard);
+      
+      // Log command
+      await logBotMessage(telegramId, chatId, username, userName, text, shopMessage, Date.now() - startTime, true, 'shop');
+      
       return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -417,6 +456,7 @@ serve(async (req) => {
 
     // Handle /help command
     if (text === '/help' || text === '/помощь') {
+      const startTime = Date.now();
       const helpMessage = `🐾 <b>Чем я могу помочь?</b>
 
 <b>Команды:</b>
@@ -434,6 +474,10 @@ serve(async (req) => {
 Спрашивай о кормах, уходе, воспитании — обо всём! 💬`;
 
       await sendTelegramMessage(chatId, helpMessage);
+      
+      // Log command
+      await logBotMessage(telegramId, chatId, username, userName, text, helpMessage, Date.now() - startTime, true, 'help');
+      
       return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -532,6 +576,7 @@ ${orderId ? `\n🔢 <b>ID:</b> <code>${orderId.slice(0, 8)}</code>` : ''}
     }
 
     // For any other message, use AI to respond
+    const startTime = Date.now();
     console.log(`Processing AI request for: "${text}" from ${userName}`);
     
     // Update last message time
@@ -555,6 +600,9 @@ ${orderId ? `\n🔢 <b>ID:</b> <code>${orderId.slice(0, 8)}</code>` : ''}
     } : undefined;
 
     await sendTelegramMessage(chatId, aiResponse, keyboard);
+    
+    // Log AI conversation
+    await logBotMessage(telegramId, chatId, username, userName, text, aiResponse, Date.now() - startTime, false, null);
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

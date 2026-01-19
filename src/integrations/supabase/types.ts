@@ -236,6 +236,48 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_message_logs: {
+        Row: {
+          bot_response: string
+          chat_id: number
+          command_type: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          is_command: boolean | null
+          response_time_ms: number | null
+          telegram_id: number
+          user_message: string
+          username: string | null
+        }
+        Insert: {
+          bot_response: string
+          chat_id: number
+          command_type?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          is_command?: boolean | null
+          response_time_ms?: number | null
+          telegram_id: number
+          user_message: string
+          username?: string | null
+        }
+        Update: {
+          bot_response?: string
+          chat_id?: number
+          command_type?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          is_command?: boolean | null
+          response_time_ms?: number | null
+          telegram_id?: number
+          user_message?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       bot_subscribers: {
         Row: {
           chat_id: number
