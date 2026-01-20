@@ -1,14 +1,87 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Plus, Trash2, Save, X, Loader2, Send, 
-  Edit2, Image as ImageIcon, Link, Users, CheckCircle
+  Edit2, Image as ImageIcon, Link, Users, CheckCircle, Eye, EyeOff
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
+// Telegram message preview component
+const TelegramPreview = ({ 
+  message, 
+  imageUrl, 
+  buttonText, 
+  buttonUrl, 
+  broadcastType 
+}: { 
+  message: string; 
+  imageUrl?: string | null; 
+  buttonText?: string | null; 
+  buttonUrl?: string | null;
+  broadcastType: string;
+}) => {
+  const typeEmoji: Record<string, string> = {
+    promo: '🔥',
+    new: '✨',
+    gift: '🎁',
+    info: 'ℹ️',
+  };
+  const emoji = typeEmoji[broadcastType] || '';
+  const fullMessage = emoji ? `${emoji} ${message}` : message;
+
+  return (
+    <div className="bg-[#0e1621] rounded-xl p-3 max-w-sm mx-auto">
+      <div className="text-xs text-blue-400 mb-2 flex items-center gap-1">
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+          P
+        </div>
+        <span className="font-medium">PetShop Bot</span>
+      </div>
+      
+      {imageUrl && (
+        <div className="mb-2 rounded-lg overflow-hidden">
+          <img 
+            src={imageUrl} 
+            alt="Preview" 
+            className="w-full h-32 object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+      )}
+      
+      <div 
+        className="text-white text-sm whitespace-pre-wrap break-words"
+        dangerouslySetInnerHTML={{ 
+          __html: fullMessage
+            .replace(/<b>/g, '<strong>')
+            .replace(/<\/b>/g, '</strong>')
+            .replace(/<i>/g, '<em>')
+            .replace(/<\/i>/g, '</em>')
+            .replace(/\n/g, '<br/>')
+        }}
+      />
+      
+      {buttonText && buttonUrl && (
+        <div className="mt-3">
+          <button className="w-full bg-[#2b5278] hover:bg-[#3a6a99] text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+            {buttonText}
+          </button>
+        </div>
+      )}
+      
+      <div className="text-right mt-1">
+        <span className="text-[10px] text-gray-500">
+          {new Date().toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
+        </span>
+      </div>
+    </div>
+  );
+};
 interface Broadcast {
   id: string;
   title: string;
@@ -40,6 +113,7 @@ const BroadcastsAdminTab = () => {
   const [sending, setSending] = useState<string | null>(null);
   const [editing, setEditing] = useState<Broadcast | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [showPreview, setShowPreview] = useState<'new' | 'edit' | null>(null);
 
   const emptyBroadcast: Omit<Broadcast, 'id' | 'created_at' | 'sent_at' | 'sent_count' | 'failed_count'> = {
     title: '',
@@ -309,6 +383,36 @@ const BroadcastsAdminTab = () => {
             </div>
           </div>
 
+          {/* Preview toggle and display for new broadcast */}
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={() => setShowPreview(showPreview === 'new' ? null : 'new')}
+          >
+            {showPreview === 'new' ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+            {showPreview === 'new' ? 'Скрыть превью' : 'Показать превью'}
+          </Button>
+
+          <AnimatePresence>
+            {showPreview === 'new' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="text-xs text-muted-foreground text-center mb-2">Так будет выглядеть в Telegram:</div>
+                <TelegramPreview
+                  message={newBroadcast.message || 'Текст сообщения...'}
+                  imageUrl={newBroadcast.image_url}
+                  buttonText={newBroadcast.button_text}
+                  buttonUrl={newBroadcast.button_url}
+                  broadcastType={newBroadcast.broadcast_type}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <Button className="w-full" onClick={handleCreate}>
             <Save className="w-4 h-4 mr-2" />
             Сохранить черновик
@@ -358,12 +462,43 @@ const BroadcastsAdminTab = () => {
                     </button>
                   ))}
                 </div>
+                
+                {/* Preview toggle and display for editing */}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="w-full" 
+                  onClick={() => setShowPreview(showPreview === 'edit' ? null : 'edit')}
+                >
+                  {showPreview === 'edit' ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
+                  {showPreview === 'edit' ? 'Скрыть превью' : 'Превью'}
+                </Button>
+
+                <AnimatePresence>
+                  {showPreview === 'edit' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <TelegramPreview
+                        message={editing.message || 'Текст сообщения...'}
+                        imageUrl={editing.image_url}
+                        buttonText={editing.button_text}
+                        buttonUrl={editing.button_url}
+                        broadcastType={editing.broadcast_type}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="flex gap-2">
                   <Button className="flex-1" onClick={handleUpdate}>
                     <Save className="w-4 h-4 mr-2" />
                     Сохранить
                   </Button>
-                  <Button variant="outline" onClick={() => setEditing(null)}>
+                  <Button variant="outline" onClick={() => { setEditing(null); setShowPreview(null); }}>
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
