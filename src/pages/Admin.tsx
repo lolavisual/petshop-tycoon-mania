@@ -4,7 +4,7 @@ import { useAdmin, AdminStats, AdminUser, AdminArticle } from '@/hooks/useAdmin'
 import { 
   Shield, Users, FileText, BarChart3, Send, Ban, 
   CheckCircle, XCircle, Search, ChevronLeft, ChevronRight,
-  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target, PawPrint, Bot
+  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target, PawPrint, Bot, Crown, Bell
 } from 'lucide-react';
 import ProductsAdminTab from '@/components/ProductsAdminTab';
 import PromotionsAdminTab from '@/components/admin/PromotionsAdminTab';
@@ -14,11 +14,13 @@ import BroadcastsAdminTab from '@/components/admin/BroadcastsAdminTab';
 import OrdersAdminTab from '@/components/admin/OrdersAdminTab';
 import PetsAdminTab from '@/components/admin/PetsAdminTab';
 import BotAnalyticsTab from '@/components/admin/BotAnalyticsTab';
+import PremiumAdminTab from '@/components/admin/PremiumAdminTab';
+import TelegramNotificationsTab from '@/components/admin/TelegramNotificationsTab';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders' | 'pets' | 'bot-analytics';
+type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders' | 'pets' | 'bot-analytics' | 'premium' | 'notifications';
 
 const AdminPage = () => {
   const [adminSecret, setAdminSecret] = useState('');
@@ -240,6 +242,8 @@ const AdminPage = () => {
       <div className="flex gap-1 p-2 overflow-x-auto">
         {[
           { id: 'stats', icon: BarChart3, label: 'Статистика' },
+          { id: 'premium', icon: Crown, label: 'Premium' },
+          { id: 'notifications', icon: Bell, label: 'Уведомления' },
           { id: 'orders', icon: ShoppingCart, label: 'Заказы' },
           { id: 'bot-analytics', icon: Bot, label: 'Бот' },
           { id: 'users', icon: Users, label: 'Пользователи' },
@@ -588,6 +592,16 @@ const AdminPage = () => {
           {/* Аналитика бота */}
           {activeTab === 'bot-analytics' && (
             <BotAnalyticsTab />
+          )}
+
+          {/* Premium подписки */}
+          {activeTab === 'premium' && (
+            <PremiumAdminTab />
+          )}
+
+          {/* Telegram уведомления */}
+          {activeTab === 'notifications' && (
+            <TelegramNotificationsTab />
           )}
         </AnimatePresence>
       </div>
