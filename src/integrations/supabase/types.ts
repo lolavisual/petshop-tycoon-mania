@@ -701,6 +701,10 @@ export type Database = {
       profiles: {
         Row: {
           avatar_variant: number
+          caught_common: number | null
+          caught_epic: number | null
+          caught_legendary: number | null
+          caught_rare: number | null
           created_at: string
           crystals: number
           diamonds: number
@@ -716,6 +720,7 @@ export type Database = {
           last_passive_claim: string
           last_streak_date: string | null
           level: number
+          max_legendary_streak: number | null
           passive_rate: number
           pet_changes: number
           pet_type: string
@@ -731,6 +736,10 @@ export type Database = {
         }
         Insert: {
           avatar_variant?: number
+          caught_common?: number | null
+          caught_epic?: number | null
+          caught_legendary?: number | null
+          caught_rare?: number | null
           created_at?: string
           crystals?: number
           diamonds?: number
@@ -746,6 +755,7 @@ export type Database = {
           last_passive_claim?: string
           last_streak_date?: string | null
           level?: number
+          max_legendary_streak?: number | null
           passive_rate?: number
           pet_changes?: number
           pet_type?: string
@@ -761,6 +771,10 @@ export type Database = {
         }
         Update: {
           avatar_variant?: number
+          caught_common?: number | null
+          caught_epic?: number | null
+          caught_legendary?: number | null
+          caught_rare?: number | null
           created_at?: string
           crystals?: number
           diamonds?: number
@@ -776,6 +790,7 @@ export type Database = {
           last_passive_claim?: string
           last_streak_date?: string | null
           level?: number
+          max_legendary_streak?: number | null
           passive_rate?: number
           pet_changes?: number
           pet_type?: string

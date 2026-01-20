@@ -1,14 +1,17 @@
 import { motion } from 'framer-motion';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { useGameState } from '@/hooks/useGameState';
-import { Crown, Trophy, Medal, Sparkles, RefreshCw } from 'lucide-react';
+import { Crown, Trophy, Medal, Sparkles, RefreshCw, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const PETS = ['🐕', '🐈', '🐹', '🐰', '🦜'];
 
 const LeaderboardPage = () => {
-  const { leaderboard, loading, refreshLeaderboard } = useLeaderboard();
+  const { leaderboard, legendaryLeaderboard, loading, refreshLeaderboard, activeType, setActiveType } = useLeaderboard();
   const { profile } = useGameState();
+  
+  const currentLeaderboard = activeType === 'legendary' ? legendaryLeaderboard : leaderboard;
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -49,8 +52,8 @@ const LeaderboardPage = () => {
     );
   }
 
-  const currentUserRank = leaderboard.findIndex(p => p.id === profile?.id) + 1;
-
+  const currentUserRank = currentLeaderboard.findIndex(p => p.id === profile?.id) + 1;
+  const isLegendaryMode = activeType === 'legendary';
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -66,12 +69,12 @@ const LeaderboardPage = () => {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-white" />
+              {isLegendaryMode ? <Star className="w-6 h-6 text-white" /> : <Trophy className="w-6 h-6 text-white" />}
             </div>
             <div>
               <h1 className="text-xl font-bold">Лидерборд</h1>
               <p className="text-sm text-muted-foreground">
-                Топ-50 игроков
+                {isLegendaryMode ? 'Топ охотников на легендарных' : 'Топ-50 игроков'}
               </p>
             </div>
           </div>
@@ -86,15 +89,29 @@ const LeaderboardPage = () => {
         </div>
 
         {currentUserRank > 0 && (
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm mb-3">
             <span className="text-muted-foreground">Твоё место:</span>
             <span className="font-bold text-primary">#{currentUserRank}</span>
           </div>
         )}
+
+        {/* Tabs for switching between leaderboards */}
+        <Tabs value={activeType} onValueChange={(v) => setActiveType(v as 'level' | 'legendary')} className="w-full">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="level" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" />
+              По уровню
+            </TabsTrigger>
+            <TabsTrigger value="legendary" className="flex items-center gap-2">
+              <Star className="w-4 h-4" />
+              Легендарные
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </motion.div>
 
       {/* Top 3 Podium */}
-      {leaderboard.length >= 3 && (
+      {currentLeaderboard.length >= 3 && (
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -126,14 +143,16 @@ const LeaderboardPage = () => {
               >
                 ✨
               </motion.span>
-              {PETS[leaderboard[1].avatar_variant % PETS.length]}
+              {PETS[currentLeaderboard[1].avatar_variant % PETS.length]}
             </motion.div>
             <div className="glass-card p-3 rounded-xl text-center border border-gray-400/30">
               <Trophy className="w-5 h-5 text-gray-400 mx-auto mb-1" />
               <p className="font-bold text-sm truncate max-w-20">
-                {leaderboard[1].first_name || leaderboard[1].username || 'Игрок'}
+                {currentLeaderboard[1].first_name || currentLeaderboard[1].username || 'Игрок'}
               </p>
-              <p className="text-xs text-muted-foreground">Ур. {leaderboard[1].level}</p>
+              <p className="text-xs text-muted-foreground">
+                {isLegendaryMode ? `⭐ ${currentLeaderboard[1].caught_legendary || 0}` : `Ур. ${currentLeaderboard[1].level}`}
+              </p>
             </div>
           </div>
 
@@ -180,7 +199,7 @@ const LeaderboardPage = () => {
               >
                 ⭐
               </motion.span>
-              <span className="relative z-10">{PETS[leaderboard[0].avatar_variant % PETS.length]}</span>
+              <span className="relative z-10">{PETS[currentLeaderboard[0].avatar_variant % PETS.length]}</span>
             </motion.div>
             <div className="glass-card-premium p-4 rounded-xl text-center border-2 border-yellow-500/30 relative">
               <motion.div
@@ -191,12 +210,17 @@ const LeaderboardPage = () => {
                 <Crown className="w-6 h-6 text-yellow-400" />
               </motion.div>
               <p className="font-bold truncate max-w-24 mt-2">
-                {leaderboard[0].first_name || leaderboard[0].username || 'Игрок'}
+                {currentLeaderboard[0].first_name || currentLeaderboard[0].username || 'Игрок'}
               </p>
-              <p className="text-sm text-muted-foreground">Ур. {leaderboard[0].level}</p>
+              <p className="text-sm text-muted-foreground">
+                {isLegendaryMode ? `⭐ ${currentLeaderboard[0].caught_legendary || 0}` : `Ур. ${currentLeaderboard[0].level}`}
+              </p>
               <div className="flex items-center justify-center gap-1 text-xs text-cyan-400 mt-1">
                 <Sparkles className="w-3 h-3" />
-                {Math.floor(leaderboard[0].crystals).toLocaleString()}
+                {isLegendaryMode 
+                  ? `${currentLeaderboard[0].caught_legendary || 0} легендарных`
+                  : Math.floor(currentLeaderboard[0].crystals).toLocaleString()
+                }
               </div>
             </div>
           </div>
@@ -226,14 +250,16 @@ const LeaderboardPage = () => {
               >
                 🌟
               </motion.span>
-              {PETS[leaderboard[2].avatar_variant % PETS.length]}
+              {PETS[currentLeaderboard[2].avatar_variant % PETS.length]}
             </motion.div>
             <div className="glass-card p-3 rounded-xl text-center border border-amber-600/30">
               <Medal className="w-5 h-5 text-amber-600 mx-auto mb-1" />
               <p className="font-bold text-sm truncate max-w-20">
-                {leaderboard[2].first_name || leaderboard[2].username || 'Игрок'}
+                {currentLeaderboard[2].first_name || currentLeaderboard[2].username || 'Игрок'}
               </p>
-              <p className="text-xs text-muted-foreground">Ур. {leaderboard[2].level}</p>
+              <p className="text-xs text-muted-foreground">
+                {isLegendaryMode ? `⭐ ${currentLeaderboard[2].caught_legendary || 0}` : `Ур. ${currentLeaderboard[2].level}`}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -241,7 +267,7 @@ const LeaderboardPage = () => {
 
       {/* Rest of Leaderboard */}
       <div className="space-y-2">
-        {leaderboard.slice(3).map((player, index) => {
+        {currentLeaderboard.slice(3).map((player, index) => {
           const rank = index + 4;
           const isCurrentUser = player.id === profile?.id;
           
@@ -272,24 +298,33 @@ const LeaderboardPage = () => {
                   {isCurrentUser && <span className="text-xs ml-1">(ты)</span>}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Уровень {player.level}
+                  {isLegendaryMode ? `⭐ ${player.caught_legendary || 0} легендарных` : `Уровень ${player.level}`}
                 </p>
               </div>
 
               {/* Crystals */}
               <div className="flex items-center gap-1 text-sm text-cyan-400">
-                <Sparkles className="w-4 h-4" />
-                <span>{Math.floor(player.crystals).toLocaleString()}</span>
+                {isLegendaryMode ? (
+                  <>
+                    <Star className="w-4 h-4 text-yellow-400" />
+                    <span className="text-yellow-400">{player.caught_legendary || 0}</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>{Math.floor(player.crystals).toLocaleString()}</span>
+                  </>
+                )}
               </div>
             </motion.div>
           );
         })}
       </div>
 
-      {leaderboard.length === 0 && (
+      {currentLeaderboard.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <Trophy className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>Пока нет игроков в лидерборде</p>
+          <p>{isLegendaryMode ? 'Пока никто не поймал легендарных питомцев' : 'Пока нет игроков в лидерборде'}</p>
         </div>
       )}
     </motion.div>

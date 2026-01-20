@@ -143,9 +143,27 @@ export const useDailyQuests = (userId?: string) => {
 
     const today = new Date().toISOString().split('T')[0];
     
-    // Find quests matching this requirement type
+    // Маппинг типов требований (catch_any, catch_rare и т.д. должны обновляться при соответствующих ловлях)
+    const matchingTypes = [requirementType];
+    
+    // Если ловим любого питомца - обновляем catch_any
+    if (['catch_common', 'catch_rare', 'catch_epic', 'catch_legendary'].includes(requirementType)) {
+      matchingTypes.push('catch_any');
+    }
+    
+    // Редкие и выше обновляют catch_rare
+    if (['catch_rare', 'catch_epic', 'catch_legendary'].includes(requirementType)) {
+      matchingTypes.push('catch_rare');
+    }
+    
+    // Эпические и выше обновляют catch_epic
+    if (['catch_epic', 'catch_legendary'].includes(requirementType)) {
+      matchingTypes.push('catch_epic');
+    }
+    
+    // Find quests matching these requirement types
     const matchingUserQuests = userQuests.filter(
-      uq => uq.quest.requirement_type === requirementType && 
+      uq => matchingTypes.includes(uq.quest.requirement_type) && 
             !uq.is_completed &&
             uq.quest_date === today
     );
