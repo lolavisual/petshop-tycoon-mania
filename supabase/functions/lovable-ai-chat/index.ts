@@ -40,18 +40,48 @@ serve(async (req) => {
 
 Отвечай кратко и по делу, используй эмодзи для дружелюбности.`;
 
+    // Process messages to handle image content
+    const processedMessages = messages.map((msg: { role: string; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> }) => {
+      if (typeof msg.content === 'string') {
+        return msg;
+      }
+      // Handle multimodal content (text + images)
+      if (Array.isArray(msg.content)) {
+        return {
+          role: msg.role,
+          content: msg.content.map((part: { type: string; text?: string; image_url?: { url: string } }) => {
+            if (part.type === 'text') {
+              return { type: 'text', text: part.text };
+            }
+            if (part.type === 'image_url') {
+              return { type: 'image_url', image_url: part.image_url };
+            }
+            return part;
+          })
+        };
+      }
+      return msg;
+    });
+
     const allMessages = [
       { role: 'system', content: systemPrompt },
-      ...messages
+      ...processedMessages
     ];
 
-    // Determine model based on options
-    const model = options?.model || 'google/gemini-3-flash-preview';
+    // Use vision-capable model when images are present
+    const hasImages = messages.some((msg: { content: string | Array<{ type: string }> }) => 
+      Array.isArray(msg.content) && msg.content.some((part: { type: string }) => part.type === 'image_url')
+    );
+    
+    // Use Gemini 2.5 Pro for multimodal (images), otherwise flash for speed
+    const model = hasImages 
+      ? 'google/gemini-2.5-pro' 
+      : (options?.model || 'google/gemini-3-flash-preview');
 
-    console.log(`Lovable AI chat with model: ${model}`);
+    console.log(`Lovable AI chat with model: ${model}, hasImages: ${hasImages}`);
 
-    // For streaming
-    if (options?.stream) {
+    // For streaming (only for text-only requests)
+    if (options?.stream && !hasImages) {
       const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -95,7 +125,7 @@ serve(async (req) => {
       });
     }
 
-    // Non-streaming
+    // Non-streaming (required for images)
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {

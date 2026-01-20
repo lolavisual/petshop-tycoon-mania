@@ -9,7 +9,8 @@ import { useCaughtPetsStats } from '@/hooks/useCaughtPetsStats';
 import { useSeasonalEvents } from '@/hooks/useSeasonalEvents';
 import { useDailyLoginRewards } from '@/hooks/useDailyLoginRewards';
 import { usePremium } from '@/hooks/usePremium';
-import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3, Package, Calendar, Snowflake } from 'lucide-react';
+import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3, Package, Calendar, Snowflake, Bot } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Confetti from '@/components/Confetti';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
@@ -601,17 +602,29 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
       {/* Хаотичные питомцы */}
       <ChaoticPets onTap={onTap} comboCount={comboCount} onStreakBonus={handleStreakBonus} />
       
-      <button
-        type="button"
-        className={`w-full btn-gradient-accent py-4 rounded-2xl flex items-center justify-center gap-3 touch-manipulation active:scale-[0.98] transition-transform ${!canClaimChest() ? 'opacity-50' : ''}`}
-        onClick={handleChestClaim}
-        disabled={!canClaimChest()}
-      >
-        <Gift className="w-6 h-6" />
-        <span className="font-bold">
-          {canClaimChest() ? 'Открыть сундук!' : `Сундук через ${timeUntilChest()}`}
-        </span>
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          className={`flex-1 btn-gradient-accent py-4 rounded-2xl flex items-center justify-center gap-3 touch-manipulation active:scale-[0.98] transition-transform ${!canClaimChest() ? 'opacity-50' : ''}`}
+          onClick={handleChestClaim}
+          disabled={!canClaimChest()}
+        >
+          <Gift className="w-6 h-6" />
+          <span className="font-bold">
+            {canClaimChest() ? 'Открыть сундук!' : `Сундук через ${timeUntilChest()}`}
+          </span>
+        </button>
+        
+        <Link to="/consultant" className="shrink-0">
+          <button
+            type="button"
+            className="h-full px-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-2xl flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98] transition-transform"
+          >
+            <Bot className="w-5 h-5" />
+            <span className="font-bold text-sm">AI</span>
+          </button>
+        </Link>
+      </div>
       
       {profile.streak_days > 0 && (
         <div className="text-center text-sm text-muted-foreground">
