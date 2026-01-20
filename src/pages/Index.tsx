@@ -7,6 +7,7 @@ import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { usePetCollection } from '@/hooks/usePetCollection';
 import { useCaughtPetsStats } from '@/hooks/useCaughtPetsStats';
 import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3, Package } from 'lucide-react';
+import Confetti from '@/components/Confetti';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
 import AchievementsPage from '@/components/AchievementsPage';
@@ -431,13 +432,28 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
 // Главная страница игры
 const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?: number) => void }) => {
   const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
-  const { playTap, playCrystal, playChest } = useSoundEffects();
+  const { playTap, playCrystal, playChest, playLevelUp } = useSoundEffects();
   const { recordCatch } = useCaughtPetsStats();
   
   // Комбо система
   const [comboCount, setComboCount] = useState(0);
   const [comboTimer, setComboTimer] = useState<NodeJS.Timeout | null>(null);
   const [lastTapTime, setLastTapTime] = useState(0);
+  
+  // Конфетти для легендарных стриков
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  // Обработчик легендарного стрика (вызывается из ChaoticPets)
+  const handleStreakBonus = (streak: number) => {
+    if (streak >= 3) {
+      setShowConfetti(true);
+      // Дополнительный звук для большого стрика
+      if (streak >= 5) {
+        playLevelUp();
+        setTimeout(() => playLevelUp(), 300);
+      }
+    }
+  };
 
   // Получение множителя комбо
   const getComboMultiplier = () => {
@@ -528,6 +544,9 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
+      {/* Конфетти для легендарных стриков */}
+      <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
       {/* Плавающие частицы */}
       <FloatingParticles />
 
@@ -571,7 +590,7 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
       </AnimatePresence>
 
       {/* Хаотичные питомцы */}
-      <ChaoticPets onTap={onTap} comboCount={comboCount} />
+      <ChaoticPets onTap={onTap} comboCount={comboCount} onStreakBonus={handleStreakBonus} />
       
       <button
         type="button"

@@ -76,6 +76,7 @@ interface CrystalEffect {
 interface ChaoticPetsProps {
   onTap: (value: number, rarity: PetRarity, streakBonus: number) => Promise<void>;
   comboCount: number;
+  onStreakBonus?: (streak: number) => void; // Callback для конфетти при стриках x3+
 }
 
 // Цвета по редкости
@@ -92,7 +93,7 @@ interface StreakBonusEffect {
   label: string;
 }
 
-const ChaoticPets = ({ onTap, comboCount }: ChaoticPetsProps) => {
+const ChaoticPets = ({ onTap, comboCount, onStreakBonus }: ChaoticPetsProps) => {
   const [pets, setPets] = useState<FloatingPet[]>([]);
   const [crystalEffects, setCrystalEffects] = useState<CrystalEffect[]>([]);
   const [effectId, setEffectId] = useState(0);
@@ -201,6 +202,11 @@ const ChaoticPets = ({ onTap, comboCount }: ChaoticPetsProps) => {
         
         // Дополнительные звуки для стрика
         setTimeout(() => playLevelUp(), 200);
+        
+        // Вызываем callback для конфетти при стриках x3+
+        if (currentStreak >= 3 && onStreakBonus) {
+          onStreakBonus(currentStreak);
+        }
       }
     } else {
       // Сброс стрика

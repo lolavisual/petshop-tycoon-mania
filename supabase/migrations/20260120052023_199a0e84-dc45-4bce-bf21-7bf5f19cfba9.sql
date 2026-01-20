@@ -1,0 +1,7 @@
+-- Добавляем достижения за ловлю легендарных питомцев
+INSERT INTO achievements (name, name_ru, description, description_ru, requirement_type, requirement_value, reward_crystals, reward_diamonds, icon, category) VALUES
+  ('Legendary Hunter I', 'Охотник на легенд I', 'Catch 5 legendary pets', 'Поймай 5 легендарных питомцев', 'legendary_caught', 5, 1000, 5, '🏆', 'pets'),
+  ('Legendary Hunter II', 'Охотник на легенд II', 'Catch 25 legendary pets', 'Поймай 25 легендарных питомцев', 'legendary_caught', 25, 3000, 15, '🏅', 'pets'),
+  ('Legendary Hunter III', 'Охотник на легенд III', 'Catch 100 legendary pets', 'Поймай 100 легендарных питомцев', 'legendary_caught', 100, 10000, 50, '👑', 'pets'),
+  ('Lucky Streak', 'Счастливый стрик', 'Get a legendary streak of 3', 'Получи легендарный стрик x3', 'max_legendary_streak', 3, 2000, 10, '🔥', 'pets'),
+  ('Mega Streak', 'Мега стрик', 'Get a legendary streak of 5', 'Получи легендарный стрик x5', 'max_legendary_streak', 5, 5000, 25, '⚡', 'pets');

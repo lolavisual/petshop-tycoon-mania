@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useGameState } from './useGameState';
 import { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-
+import { useCaughtPetsStats } from './useCaughtPetsStats';
 interface Achievement {
   id: string;
   name: string;
@@ -28,6 +28,7 @@ interface UserAchievement {
 export const useAchievements = () => {
   const { profile, refreshProfile } = useGameState();
   const queryClient = useQueryClient();
+  const { stats: caughtPetsStats } = useCaughtPetsStats();
 
   // Fetch all achievements
   const { data: achievements = [], isLoading: achievementsLoading } = useQuery({
@@ -77,10 +78,14 @@ export const useAchievements = () => {
         return (profile.pet_changes || 0) >= achievement.requirement_value;
       case 'quests_completed':
         return (profile.quests_completed || 0) >= achievement.requirement_value;
+      case 'legendary_caught':
+        return caughtPetsStats.legendary >= achievement.requirement_value;
+      case 'max_legendary_streak':
+        return caughtPetsStats.maxLegendaryStreak >= achievement.requirement_value;
       default:
         return false;
     }
-  }, [profile]);
+  }, [profile, caughtPetsStats]);
 
   // Unlock achievement mutation
   const unlockMutation = useMutation({
@@ -145,7 +150,7 @@ export const useAchievements = () => {
         toast.success(`🏆 Достижение разблокировано: ${achievement.name_ru}!`);
       }
     });
-  }, [profile?.level, profile?.crystals, profile?.diamonds, profile?.streak_days, profile?.pet_changes, profile?.quests_completed, achievements, userAchievements]);
+  }, [profile?.level, profile?.crystals, profile?.diamonds, profile?.streak_days, profile?.pet_changes, profile?.quests_completed, achievements, userAchievements, caughtPetsStats.legendary, caughtPetsStats.maxLegendaryStreak]);
 
   // Get achievement status
   const getAchievementStatus = useCallback((achievement: Achievement) => {
@@ -186,10 +191,16 @@ export const useAchievements = () => {
       case 'quests_completed':
         current = profile.quests_completed || 0;
         break;
+      case 'legendary_caught':
+        current = caughtPetsStats.legendary;
+        break;
+      case 'max_legendary_streak':
+        current = caughtPetsStats.maxLegendaryStreak;
+        break;
     }
 
     return Math.min((current / achievement.requirement_value) * 100, 100);
-  }, [profile]);
+  }, [profile, caughtPetsStats]);
 
   const claimReward = useCallback((achievement: Achievement) => {
     claimRewardMutation.mutate({
