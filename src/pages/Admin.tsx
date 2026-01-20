@@ -4,7 +4,7 @@ import { useAdmin, AdminStats, AdminUser, AdminArticle } from '@/hooks/useAdmin'
 import { 
   Shield, Users, FileText, BarChart3, Send, Ban, 
   CheckCircle, XCircle, Search, ChevronLeft, ChevronRight,
-  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target, PawPrint, Bot, Crown, Bell
+  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target, PawPrint, Bot, Crown, Bell, Globe
 } from 'lucide-react';
 import ProductsAdminTab from '@/components/ProductsAdminTab';
 import PromotionsAdminTab from '@/components/admin/PromotionsAdminTab';
@@ -16,11 +16,12 @@ import PetsAdminTab from '@/components/admin/PetsAdminTab';
 import BotAnalyticsTab from '@/components/admin/BotAnalyticsTab';
 import PremiumAdminTab from '@/components/admin/PremiumAdminTab';
 import TelegramNotificationsTab from '@/components/admin/TelegramNotificationsTab';
+import FirecrawlImportTab from '@/components/admin/FirecrawlImportTab';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders' | 'pets' | 'bot-analytics' | 'premium' | 'notifications';
+type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders' | 'pets' | 'bot-analytics' | 'premium' | 'notifications' | 'firecrawl';
 
 const AdminPage = () => {
   const [adminSecret, setAdminSecret] = useState('');
@@ -254,6 +255,7 @@ const AdminPage = () => {
           { id: 'quests', icon: Target, label: 'Квесты' },
           { id: 'quizzes', icon: HelpCircle, label: 'Квизы' },
           { id: 'mailings', icon: Megaphone, label: 'Рассылки' },
+          { id: 'firecrawl', icon: Globe, label: 'Парсинг' },
           { id: 'broadcast', icon: Send, label: 'Игра' },
         ].map(tab => (
           <button
@@ -602,6 +604,30 @@ const AdminPage = () => {
           {/* Telegram уведомления */}
           {activeTab === 'notifications' && (
             <TelegramNotificationsTab />
+          )}
+
+          {/* Firecrawl парсинг */}
+          {activeTab === 'firecrawl' && (
+            <FirecrawlImportTab 
+              onImportProducts={async (products) => {
+                // Import products to database
+                const { supabase } = await import('@/integrations/supabase/client');
+                for (const product of products) {
+                  await supabase.from('pet_products').insert({
+                    name_ru: product.name,
+                    name: product.name,
+                    description_ru: product.description,
+                    description: product.description,
+                    category: product.category || 'other',
+                    price: product.price || 0,
+                    currency: 'RUB',
+                    image_url: product.image_url,
+                    icon: '🐾',
+                    in_stock: true,
+                  });
+                }
+              }}
+            />
           )}
         </AnimatePresence>
       </div>
