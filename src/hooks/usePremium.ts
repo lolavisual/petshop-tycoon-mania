@@ -105,69 +105,47 @@ export function usePremium() {
         return null;
       }
 
-      // In Telegram, we would create invoice via Telegram Stars API
-      // For now, simulate purchase with in-game currency (stones)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('stones, crystals, diamonds')
-        .eq('id', user.id)
-        .single();
+      // Try to create Telegram Stars invoice
+      const { data: invoiceData, error: invoiceError } = await supabase.functions.invoke('telegram-stars-payment', {
+        body: {
+          action: 'create_invoice',
+          planId,
+          userId: user.id
+        }
+      });
 
-      if (!profile) {
-        toast.error('Профиль не найден');
-        return null;
+      if (invoiceError) {
+        console.error('Invoice error:', invoiceError);
+        // Fall back to in-game currency
+        return await purchaseWithStones(user.id, plan);
       }
 
-      // Use stones as premium currency (1 stone = 10 stars equivalent)
-      const stonesRequired = Math.ceil(plan.stars_price / 10);
-      
-      if (profile.stones < stonesRequired) {
-        toast.error(`Недостаточно камней! Нужно: ${stonesRequired} 🪨`);
-        return null;
+      if (invoiceData?.success && invoiceData?.invoiceLink) {
+        // Open Telegram payment dialog
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg?.openInvoice) {
+          tg.openInvoice(invoiceData.invoiceLink, async (status: string) => {
+            if (status === 'paid') {
+              hapticNotification('success');
+              toast.success(`🌟 Premium активирован на ${plan.duration_days} дней!`);
+              await loadPremiumData();
+            } else if (status === 'cancelled') {
+              toast.info('Оплата отменена');
+            } else if (status === 'failed') {
+              toast.error('Ошибка оплаты');
+            }
+          });
+          return plan;
+        } else {
+          // Fallback for non-Telegram environment
+          window.open(invoiceData.invoiceLink, '_blank');
+          toast.info('Откройте ссылку для оплаты в Telegram');
+          return plan;
+        }
       }
 
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
-
-      // Create subscription
-      await supabase
-        .from('premium_subscriptions')
-        .insert({
-          user_id: user.id,
-          plan_type: plan.name,
-          stars_paid: plan.stars_price,
-          expires_at: expiresAt.toISOString(),
-          is_active: true
-        });
-
-      // Update profile
-      await supabase
-        .from('profiles')
-        .update({
-          stones: profile.stones - stonesRequired,
-          crystals: profile.crystals + plan.crystals_bonus,
-          diamonds: profile.diamonds + plan.diamonds_bonus,
-          is_premium: true,
-          premium_expires_at: expiresAt.toISOString()
-        })
-        .eq('id', user.id);
-
-      // Grant exclusive pet if available
-      if (plan.exclusive_pet) {
-        await supabase
-          .from('user_pets')
-          .upsert({
-            user_id: user.id,
-            pet_type: plan.exclusive_pet
-          }, { onConflict: 'user_id,pet_type' });
-      }
-
-      setIsPremium(true);
-      hapticNotification('success');
-      toast.success(`🌟 Premium активирован на ${plan.duration_days} дней!`);
-
-      await loadPremiumData();
-      return plan;
+      // Fall back to in-game currency
+      return await purchaseWithStones(user.id, plan);
     } catch (err) {
       console.error('Error purchasing premium:', err);
       toast.error('Ошибка покупки');
@@ -176,6 +154,70 @@ export function usePremium() {
       setPurchasing(false);
     }
   }, [purchasing, plans, loadPremiumData]);
+
+  const purchaseWithStones = async (userId: string, plan: PremiumPlan) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('stones, crystals, diamonds')
+      .eq('id', userId)
+      .single();
+
+    if (!profile) {
+      toast.error('Профиль не найден');
+      return null;
+    }
+
+    // Use stones as premium currency (1 stone = 10 stars equivalent)
+    const stonesRequired = Math.ceil(plan.stars_price / 10);
+    
+    if (profile.stones < stonesRequired) {
+      toast.error(`Недостаточно камней! Нужно: ${stonesRequired} 🪨`);
+      return null;
+    }
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
+
+    // Create subscription
+    await supabase
+      .from('premium_subscriptions')
+      .insert({
+        user_id: userId,
+        plan_type: plan.name,
+        stars_paid: plan.stars_price,
+        expires_at: expiresAt.toISOString(),
+        is_active: true
+      });
+
+    // Update profile
+    await supabase
+      .from('profiles')
+      .update({
+        stones: profile.stones - stonesRequired,
+        crystals: profile.crystals + plan.crystals_bonus,
+        diamonds: profile.diamonds + plan.diamonds_bonus,
+        is_premium: true,
+        premium_expires_at: expiresAt.toISOString()
+      })
+      .eq('id', userId);
+
+    // Grant exclusive pet if available
+    if (plan.exclusive_pet) {
+      await supabase
+        .from('user_pets')
+        .upsert({
+          user_id: userId,
+          pet_type: plan.exclusive_pet
+        }, { onConflict: 'user_id,pet_type' });
+    }
+
+    setIsPremium(true);
+    hapticNotification('success');
+    toast.success(`🌟 Premium активирован на ${plan.duration_days} дней!`);
+
+    await loadPremiumData();
+    return plan;
+  };
 
   const getMultipliers = useCallback(() => {
     if (!isPremium || !subscription) {
