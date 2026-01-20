@@ -728,6 +728,96 @@ export type Database = {
         }
         Relationships: []
       }
+      premium_plans: {
+        Row: {
+          click_multiplier: number
+          created_at: string
+          crystals_bonus: number
+          description: string | null
+          description_ru: string | null
+          diamonds_bonus: number
+          duration_days: number
+          exclusive_pet: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_ru: string
+          passive_multiplier: number
+          stars_price: number
+          xp_multiplier: number
+        }
+        Insert: {
+          click_multiplier?: number
+          created_at?: string
+          crystals_bonus?: number
+          description?: string | null
+          description_ru?: string | null
+          diamonds_bonus?: number
+          duration_days?: number
+          exclusive_pet?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ru: string
+          passive_multiplier?: number
+          stars_price?: number
+          xp_multiplier?: number
+        }
+        Update: {
+          click_multiplier?: number
+          created_at?: string
+          crystals_bonus?: number
+          description?: string | null
+          description_ru?: string | null
+          diamonds_bonus?: number
+          duration_days?: number
+          exclusive_pet?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ru?: string
+          passive_multiplier?: number
+          stars_price?: number
+          xp_multiplier?: number
+        }
+        Relationships: []
+      }
+      premium_subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          is_active: boolean
+          plan_type: string
+          stars_paid: number
+          started_at: string
+          telegram_payment_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          is_active?: boolean
+          plan_type?: string
+          stars_paid?: number
+          started_at?: string
+          telegram_payment_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          plan_type?: string
+          stars_paid?: number
+          started_at?: string
+          telegram_payment_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_variant: number
@@ -744,6 +834,7 @@ export type Database = {
           gifts_sent: number
           id: string
           is_banned: boolean
+          is_premium: boolean | null
           last_active_at: string
           last_chest_claim: string | null
           last_name: string | null
@@ -754,6 +845,7 @@ export type Database = {
           passive_rate: number
           pet_changes: number
           pet_type: string
+          premium_expires_at: string | null
           quests_completed: number
           stones: number
           streak_days: number
@@ -779,6 +871,7 @@ export type Database = {
           gifts_sent?: number
           id: string
           is_banned?: boolean
+          is_premium?: boolean | null
           last_active_at?: string
           last_chest_claim?: string | null
           last_name?: string | null
@@ -789,6 +882,7 @@ export type Database = {
           passive_rate?: number
           pet_changes?: number
           pet_type?: string
+          premium_expires_at?: string | null
           quests_completed?: number
           stones?: number
           streak_days?: number
@@ -814,6 +908,7 @@ export type Database = {
           gifts_sent?: number
           id?: string
           is_banned?: boolean
+          is_premium?: boolean | null
           last_active_at?: string
           last_chest_claim?: string | null
           last_name?: string | null
@@ -824,6 +919,7 @@ export type Database = {
           passive_rate?: number
           pet_changes?: number
           pet_type?: string
+          premium_expires_at?: string | null
           quests_completed?: number
           stones?: number
           streak_days?: number

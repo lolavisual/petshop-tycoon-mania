@@ -412,6 +412,106 @@ serve(async (req) => {
       });
     }
 
+    // Send daily rewards notification to all subscribers
+    if (body.action === 'send_daily_notifications') {
+      console.log('Sending daily reward notifications');
+      
+      const { data: subscribers } = await supabase
+        .from('bot_subscribers')
+        .select('chat_id, telegram_id, first_name')
+        .eq('is_active', true);
+
+      let sent = 0;
+      for (const sub of subscribers || []) {
+        const message = `🎁 <b>Ежедневная награда ждёт тебя!</b>
+
+Привет, ${sub.first_name || 'друг'}! 👋
+
+Твой ежедневный бонус готов к получению! 
+Не забудь зайти и забрать награды! 💎
+
+🔥 Не пропускай дни — чем длиннее серия, тем лучше награды!`;
+
+        const keyboard = {
+          inline_keyboard: [
+            [{ text: '🎁 Забрать награду', web_app: { url: 'https://petshoptycoon.lovable.app' } }]
+          ]
+        };
+
+        try {
+          await sendTelegramMessage(sub.chat_id, message, keyboard);
+          sent++;
+          await new Promise(resolve => setTimeout(resolve, 50));
+        } catch (err) {
+          console.error(`Failed to notify ${sub.telegram_id}:`, err);
+        }
+      }
+
+      return new Response(JSON.stringify({ sent }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Send seasonal event notification
+    if (body.action === 'send_seasonal_notification') {
+      console.log('Sending seasonal event notification');
+      
+      // Get active seasonal event
+      const { data: event } = await supabase
+        .from('seasonal_events')
+        .select('*')
+        .eq('is_active', true)
+        .lte('start_date', new Date().toISOString())
+        .gte('end_date', new Date().toISOString())
+        .single();
+
+      if (!event) {
+        return new Response(JSON.stringify({ error: 'No active event' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: subscribers } = await supabase
+        .from('bot_subscribers')
+        .select('chat_id, telegram_id, first_name')
+        .eq('is_active', true);
+
+      const endDate = new Date(event.end_date);
+      const daysLeft = Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+      let sent = 0;
+      for (const sub of subscribers || []) {
+        const message = `${event.icon} <b>${event.name_ru}!</b>
+
+${sub.first_name || 'Привет'}! Сезонное событие в разгаре! 🎉
+
+${event.description_ru}
+
+⏰ <b>Осталось ${daysLeft} дней!</b>
+🎁 Собирай награды и получи эксклюзивного питомца 🦌
+
+Бонус x${event.bonus_multiplier} ко всем наградам! ⚡`;
+
+        const keyboard = {
+          inline_keyboard: [
+            [{ text: `${event.icon} Участвовать!`, web_app: { url: 'https://petshoptycoon.lovable.app' } }]
+          ]
+        };
+
+        try {
+          await sendTelegramMessage(sub.chat_id, message, keyboard);
+          sent++;
+          await new Promise(resolve => setTimeout(resolve, 50));
+        } catch (err) {
+          console.error(`Failed to notify ${sub.telegram_id}:`, err);
+        }
+      }
+
+      return new Response(JSON.stringify({ sent }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Regular Telegram webhook update
     const update: TelegramUpdate = body;
     console.log('Received update:', JSON.stringify(update));
