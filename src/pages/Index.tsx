@@ -6,7 +6,9 @@ import { useTelegramTheme } from '@/hooks/useTelegramTheme';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { usePetCollection } from '@/hooks/usePetCollection';
 import { useCaughtPetsStats } from '@/hooks/useCaughtPetsStats';
-import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3, Package } from 'lucide-react';
+import { useSeasonalEvents } from '@/hooks/useSeasonalEvents';
+import { useDailyLoginRewards } from '@/hooks/useDailyLoginRewards';
+import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3, Package, Calendar, Snowflake } from 'lucide-react';
 import Confetti from '@/components/Confetti';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
@@ -17,6 +19,8 @@ import ProfilePage from '@/components/ProfilePage';
 import { TitlesPage } from '@/components/TitlesPage';
 import { LootboxPage } from '@/components/LootboxPage';
 import AchievementUnlockOverlay from '@/components/AchievementUnlockOverlay';
+import { DailyLoginRewardsModal } from '@/components/DailyLoginRewardsModal';
+import { SeasonalEventBanner } from '@/components/SeasonalEventBanner';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyQuests } from '@/hooks/useDailyQuests';
 import { useFriends } from '@/hooks/useFriends';
@@ -626,11 +630,24 @@ const Index = () => {
   const { unclaimedCount, newlyUnlockedAchievement, dismissUnlockedAchievement } = useAchievements();
   const { unclaimedCount: unclaimedQuestsCount, updateQuestProgress } = useDailyQuests(profile?.id);
   const { unclaimedGiftsCount } = useFriends(profile?.id);
+  const { activeEvent, updateProgress: updateSeasonalProgress } = useSeasonalEvents();
+  const { canClaimToday } = useDailyLoginRewards();
   
   // Демо-режим и онбординг
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showDailyRewards, setShowDailyRewards] = useState(false);
+  const [showSeasonalEvent, setShowSeasonalEvent] = useState(false);
   const isInTelegram = isTelegramWebApp();
   const isDemoMode = !isInTelegram && profile?.id === 'dev-user';
+
+  // Показываем ежедневные награды при загрузке если можно забрать
+  useEffect(() => {
+    if (!loading && canClaimToday()) {
+      // Небольшая задержка для плавности
+      const timer = setTimeout(() => setShowDailyRewards(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, canClaimToday]);
 
   useEffect(() => {
     initTelegramWebApp();
@@ -670,9 +687,63 @@ const Index = () => {
         forceShow={showOnboarding}
       />
       
+      {/* Daily Login Rewards Modal */}
+      <DailyLoginRewardsModal 
+        isOpen={showDailyRewards} 
+        onClose={() => setShowDailyRewards(false)} 
+      />
+
+      {/* Seasonal Event Modal */}
+      <SeasonalEventBanner 
+        isOpen={showSeasonalEvent} 
+        onClose={() => setShowSeasonalEvent(false)} 
+      />
+
       <header className="p-4 flex items-center justify-between relative z-10">
         <h1 className="text-2xl font-black text-gradient-primary">PetShop Tycoon</h1>
         <div className="flex items-center gap-2">
+          {/* Daily Rewards Button */}
+          <motion.button
+            type="button"
+            onClick={() => {
+              hapticImpact('light');
+              setShowDailyRewards(true);
+            }}
+            className="relative p-2 rounded-full glass-card touch-manipulation active:scale-95"
+            aria-label="Ежедневные награды"
+            animate={canClaimToday() ? { scale: [1, 1.1, 1] } : {}}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            <Calendar className={`w-5 h-5 ${canClaimToday() ? 'text-primary' : 'text-muted-foreground'}`} />
+            {canClaimToday() && (
+              <motion.span
+                className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
+            )}
+          </motion.button>
+
+          {/* Seasonal Event Button */}
+          {activeEvent && (
+            <motion.button
+              type="button"
+              onClick={() => {
+                hapticImpact('light');
+                setShowSeasonalEvent(true);
+              }}
+              className="relative p-2 rounded-full glass-card touch-manipulation active:scale-95"
+              style={{ boxShadow: `0 0 15px ${activeEvent.theme_color}40` }}
+              aria-label="Сезонное событие"
+              animate={{ 
+                boxShadow: [`0 0 10px ${activeEvent.theme_color}30`, `0 0 20px ${activeEvent.theme_color}60`, `0 0 10px ${activeEvent.theme_color}30`]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <span className="text-lg">{activeEvent.icon}</span>
+            </motion.button>
+          )}
+
           <button
             type="button"
             onClick={() => {

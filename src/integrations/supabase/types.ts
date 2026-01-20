@@ -346,6 +346,36 @@ export type Database = {
           },
         ]
       }
+      daily_login_rewards: {
+        Row: {
+          created_at: string
+          day_number: number
+          icon: string
+          id: string
+          is_premium: boolean
+          reward_amount: number
+          reward_type: string
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          icon?: string
+          id?: string
+          is_premium?: boolean
+          reward_amount?: number
+          reward_type?: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          icon?: string
+          id?: string
+          is_premium?: boolean
+          reward_amount?: number
+          reward_type?: string
+        }
+        Relationships: []
+      }
       daily_quests: {
         Row: {
           created_at: string
@@ -950,6 +980,107 @@ export type Database = {
         }
         Relationships: []
       }
+      seasonal_events: {
+        Row: {
+          bonus_multiplier: number
+          created_at: string
+          description: string | null
+          description_ru: string | null
+          end_date: string
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          name_ru: string
+          start_date: string
+          theme_color: string
+        }
+        Insert: {
+          bonus_multiplier?: number
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          end_date: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ru: string
+          start_date: string
+          theme_color?: string
+        }
+        Update: {
+          bonus_multiplier?: number
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          end_date?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ru?: string
+          start_date?: string
+          theme_color?: string
+        }
+        Relationships: []
+      }
+      seasonal_rewards: {
+        Row: {
+          created_at: string
+          description: string | null
+          description_ru: string | null
+          event_id: string
+          icon: string
+          id: string
+          name: string
+          name_ru: string
+          rarity: string
+          requirement_type: string
+          requirement_value: number
+          reward_amount: number
+          reward_type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          event_id: string
+          icon?: string
+          id?: string
+          name: string
+          name_ru: string
+          rarity?: string
+          requirement_type?: string
+          requirement_value?: number
+          reward_amount?: number
+          reward_type?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          description_ru?: string | null
+          event_id?: string
+          icon?: string
+          id?: string
+          name?: string
+          name_ru?: string
+          rarity?: string
+          requirement_type?: string
+          requirement_value?: number
+          reward_amount?: number
+          reward_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasonal_rewards_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "seasonal_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_items: {
         Row: {
           category: string
@@ -1174,6 +1305,33 @@ export type Database = {
           },
         ]
       }
+      user_login_rewards: {
+        Row: {
+          created_at: string
+          current_day: number
+          id: string
+          last_claim_date: string | null
+          total_claims: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_day?: number
+          id?: string
+          last_claim_date?: string | null
+          total_claims?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_day?: number
+          id?: string
+          last_claim_date?: string | null
+          total_claims?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_lootboxes: {
         Row: {
           id: string
@@ -1279,6 +1437,50 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_seasonal_rewards: {
+        Row: {
+          claimed_at: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          is_claimed: boolean
+          is_completed: boolean
+          progress: number
+          reward_id: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_claimed?: boolean
+          is_completed?: boolean
+          progress?: number
+          reward_id: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          is_claimed?: boolean
+          is_completed?: boolean
+          progress?: number
+          reward_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_seasonal_rewards_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "seasonal_rewards"
             referencedColumns: ["id"]
           },
         ]
