@@ -4,7 +4,7 @@ import { useAdmin, AdminStats, AdminUser, AdminArticle } from '@/hooks/useAdmin'
 import { 
   Shield, Users, FileText, BarChart3, Send, Ban, 
   CheckCircle, XCircle, Search, ChevronLeft, ChevronRight,
-  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target, PawPrint, Bot, Crown, Bell, Globe
+  Gift, Loader2, Eye, AlertTriangle, Package, Tag, HelpCircle, Megaphone, ShoppingCart, Target, PawPrint, Bot, Crown, Bell, Globe, Brain, Clock
 } from 'lucide-react';
 import ProductsAdminTab from '@/components/ProductsAdminTab';
 import PromotionsAdminTab from '@/components/admin/PromotionsAdminTab';
@@ -17,11 +17,13 @@ import BotAnalyticsTab from '@/components/admin/BotAnalyticsTab';
 import PremiumAdminTab from '@/components/admin/PremiumAdminTab';
 import TelegramNotificationsTab from '@/components/admin/TelegramNotificationsTab';
 import FirecrawlImportTab from '@/components/admin/FirecrawlImportTab';
+import PerplexityPetSearchTab from '@/components/admin/PerplexityPetSearchTab';
+import ScheduledParsingTab from '@/components/admin/ScheduledParsingTab';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders' | 'pets' | 'bot-analytics' | 'premium' | 'notifications' | 'firecrawl';
+type TabType = 'stats' | 'users' | 'articles' | 'broadcast' | 'products' | 'promotions' | 'quizzes' | 'quests' | 'mailings' | 'orders' | 'pets' | 'bot-analytics' | 'premium' | 'notifications' | 'firecrawl' | 'perplexity' | 'scheduled';
 
 const AdminPage = () => {
   const [adminSecret, setAdminSecret] = useState('');
@@ -256,6 +258,8 @@ const AdminPage = () => {
           { id: 'quizzes', icon: HelpCircle, label: 'Квизы' },
           { id: 'mailings', icon: Megaphone, label: 'Рассылки' },
           { id: 'firecrawl', icon: Globe, label: 'Парсинг' },
+          { id: 'scheduled', icon: Clock, label: 'Авто' },
+          { id: 'perplexity', icon: Brain, label: 'AI Поиск' },
           { id: 'broadcast', icon: Send, label: 'Игра' },
         ].map(tab => (
           <button
@@ -628,6 +632,16 @@ const AdminPage = () => {
                 }
               }}
             />
+          )}
+
+          {/* Perplexity AI Search */}
+          {activeTab === 'perplexity' && (
+            <PerplexityPetSearchTab />
+          )}
+
+          {/* Scheduled Parsing */}
+          {activeTab === 'scheduled' && (
+            <ScheduledParsingTab />
           )}
         </AnimatePresence>
       </div>
