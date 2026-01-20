@@ -2,12 +2,23 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDemoMode } from './useDemoMode';
 
-interface Message {
+interface ProductRecommendation {
+  id: string;
+  name?: string;
+  name_ru?: string;
+  price?: number;
+  image_url?: string | null;
+  category?: string;
+  reason?: string;
+}
+
+export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   imageUrl?: string;
   timestamp: Date;
+  productRecommendations?: ProductRecommendation[];
 }
 
 interface ChatSession {

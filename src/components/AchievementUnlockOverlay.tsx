@@ -103,10 +103,14 @@ const AchievementUnlockOverlay = ({ achievement, onClose }: AchievementUnlockOve
 
               {/* Close button */}
               <button
-                onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
+                type="button"
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-50 cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
 
               {/* Trophy icon */}
