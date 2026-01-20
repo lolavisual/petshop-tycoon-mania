@@ -8,6 +8,7 @@ import { usePetCollection } from '@/hooks/usePetCollection';
 import { useCaughtPetsStats } from '@/hooks/useCaughtPetsStats';
 import { useSeasonalEvents } from '@/hooks/useSeasonalEvents';
 import { useDailyLoginRewards } from '@/hooks/useDailyLoginRewards';
+import { usePremium } from '@/hooks/usePremium';
 import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3, Package, Calendar, Snowflake } from 'lucide-react';
 import Confetti from '@/components/Confetti';
 import ShopPage from '@/components/ShopPage';
@@ -21,6 +22,7 @@ import { LootboxPage } from '@/components/LootboxPage';
 import AchievementUnlockOverlay from '@/components/AchievementUnlockOverlay';
 import { DailyLoginRewardsModal } from '@/components/DailyLoginRewardsModal';
 import { SeasonalEventBanner } from '@/components/SeasonalEventBanner';
+import { PremiumModal } from '@/components/PremiumModal';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyQuests } from '@/hooks/useDailyQuests';
 import { useFriends } from '@/hooks/useFriends';
@@ -637,6 +639,8 @@ const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showDailyRewards, setShowDailyRewards] = useState(false);
   const [showSeasonalEvent, setShowSeasonalEvent] = useState(false);
+  const [showPremium, setShowPremium] = useState(false);
+  const { isPremium } = usePremium();
   const isInTelegram = isTelegramWebApp();
   const isDemoMode = !isInTelegram && profile?.id === 'dev-user';
 
@@ -699,6 +703,12 @@ const Index = () => {
         onClose={() => setShowSeasonalEvent(false)} 
       />
 
+      {/* Premium Modal */}
+      <PremiumModal 
+        isOpen={showPremium} 
+        onClose={() => setShowPremium(false)} 
+      />
+
       <header className="p-4 flex items-center justify-between relative z-10">
         <h1 className="text-2xl font-black text-gradient-primary">PetShop Tycoon</h1>
         <div className="flex items-center gap-2">
@@ -743,6 +753,30 @@ const Index = () => {
               <span className="text-lg">{activeEvent.icon}</span>
             </motion.button>
           )}
+
+          {/* Premium Button */}
+          <motion.button
+            type="button"
+            onClick={() => {
+              hapticImpact('light');
+              setShowPremium(true);
+            }}
+            className={`relative p-2 rounded-full glass-card touch-manipulation active:scale-95 ${isPremium ? 'ring-2 ring-amber-500/50' : ''}`}
+            aria-label="VIP Premium"
+            animate={isPremium ? { 
+              boxShadow: ['0 0 10px rgba(251,191,36,0.3)', '0 0 20px rgba(251,191,36,0.5)', '0 0 10px rgba(251,191,36,0.3)']
+            } : {}}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Crown className={`w-5 h-5 ${isPremium ? 'text-amber-400' : 'text-muted-foreground'}`} />
+            {isPremium && (
+              <motion.span
+                className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full"
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+            )}
+          </motion.button>
 
           <button
             type="button"

@@ -215,6 +215,19 @@ export function useSeasonalEvents() {
           .eq('id', user.id);
       }
 
+      // Если это награда за полное завершение события (питомец) - выдаём питомца
+      if (reward.reward_type === 'pet') {
+        await supabase
+          .from('user_pets')
+          .upsert({
+            user_id: user.id,
+            pet_type: 'reindeer' // Северный олень
+          }, { onConflict: 'user_id,pet_type' });
+        
+        hapticNotification('success');
+        toast.success(`🦌 Поздравляем! Вы получили эксклюзивного питомца "Северный олень"!`);
+      }
+
       // Помечаем награду как полученную
       await supabase
         .from('user_seasonal_rewards')
@@ -229,12 +242,14 @@ export function useSeasonalEvents() {
         p.reward_id === rewardId ? { ...p, is_claimed: true } : p
       ));
 
-      hapticNotification('success');
-      toast.success(`${reward.icon} Получено: +${reward.reward_amount} ${
-        reward.reward_type === 'crystals' ? 'кристаллов' : 
-        reward.reward_type === 'diamonds' ? 'алмазов' : 
-        reward.reward_type === 'stones' ? 'камней' : 'награда'
-      }!`);
+      if (reward.reward_type !== 'pet') {
+        hapticNotification('success');
+        toast.success(`${reward.icon} Получено: +${reward.reward_amount} ${
+          reward.reward_type === 'crystals' ? 'кристаллов' : 
+          reward.reward_type === 'diamonds' ? 'алмазов' : 
+          reward.reward_type === 'stones' ? 'камней' : 'награда'
+        }!`);
+      }
 
       return reward;
     } catch (err) {
