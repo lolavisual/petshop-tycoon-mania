@@ -71,8 +71,12 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
               </p>
               
               <button
-                onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-full bg-muted/50 hover:bg-muted transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
+                className="absolute top-4 right-4 p-2 rounded-full bg-muted/50 hover:bg-muted transition-colors z-50 cursor-pointer"
+                type="button"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -151,12 +155,16 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
 
               {/* Claim button */}
               <Button
-                onClick={handleClaim}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClaim();
+                }}
                 disabled={!canClaim || claiming || loading}
-                className={`w-full h-14 text-lg font-bold rounded-2xl transition-all ${
+                type="button"
+                className={`w-full h-14 text-lg font-bold rounded-2xl transition-all relative z-50 ${
                   canClaim 
-                    ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/30' 
-                    : 'bg-muted text-muted-foreground'
+                    ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/30 cursor-pointer' 
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }`}
               >
                 {claiming ? (

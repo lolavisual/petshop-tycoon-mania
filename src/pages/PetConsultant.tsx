@@ -3,22 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, Bot, User, Sparkles, ArrowLeft, Loader2, 
   PawPrint, Heart, Stethoscope, Apple, Scissors, HelpCircle,
-  Image, X, History, Plus, Trash2, MessageSquare
+  Image, X, History, Plus, Trash2, MessageSquare, ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Link } from 'react-router-dom';
-import { useConsultantChat } from '@/hooks/useConsultantChat';
+import { useConsultantChat, Message } from '@/hooks/useConsultantChat';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
-interface Message {
+interface ProductRecommendation {
   id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  imageUrl?: string;
-  timestamp: Date;
+  name?: string;
+  name_ru?: string;
+  price?: number;
+  image_url?: string | null;
+  category?: string;
+  reason?: string;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lovable-ai-chat`;
@@ -270,12 +273,34 @@ const PetConsultant = () => {
         // Non-streaming for images
         const data = await response.json();
         const assistantContent = data.content || 'Извините, не удалось получить ответ.';
+        
+        // Fetch product details for recommendations
+        let productRecommendations: ProductRecommendation[] = [];
+        if (data.productRecommendations && data.productRecommendations.length > 0) {
+          try {
+            const productIds = data.productRecommendations.map((r: { id: string }) => r.id);
+            const { data: products } = await supabase
+              .from('pet_products')
+              .select('id, name, name_ru, price, image_url, category')
+              .in('id', productIds);
+            
+            if (products) {
+              productRecommendations = products.map(p => ({
+                ...p,
+                reason: data.productRecommendations.find((r: { id: string; reason?: string }) => r.id === p.id)?.reason
+              }));
+            }
+          } catch (e) {
+            console.error('Error fetching product details:', e);
+          }
+        }
 
         const assistantMessage: Message = {
           id: assistantId,
           role: 'assistant',
           content: assistantContent,
           timestamp: new Date(),
+          productRecommendations,
         };
 
         setMessages(prev => [...prev, assistantMessage]);
@@ -508,6 +533,73 @@ const PetConsultant = () => {
                       <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
+                  )}
+                  
+                  {/* Product Recommendations */}
+                  {message.productRecommendations && message.productRecommendations.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-3 p-3 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <ShoppingBag className="w-4 h-4 text-primary" />
+                        <span className="font-semibold text-sm text-foreground">Рекомендуемые товары</span>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {message.productRecommendations.map((product, index) => (
+                          <motion.div
+                            key={product.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="flex items-center gap-3 p-2 rounded-lg bg-background/50 hover:bg-background/80 transition-colors"
+                          >
+                            {/* Product Image or Emoji */}
+                            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                              {product.image_url ? (
+                                <img 
+                                  src={product.image_url} 
+                                  alt={product.name_ru || ''} 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-lg">
+                                  {product.category === 'cats' ? '🐱' : 
+                                   product.category === 'dogs' ? '🐕' : 
+                                   product.category === 'birds' ? '🦜' : '📦'}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {/* Product Info */}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate text-foreground">{product.name_ru}</h4>
+                              {product.reason && (
+                                <p className="text-xs text-muted-foreground line-clamp-1">{product.reason}</p>
+                              )}
+                            </div>
+                            
+                            {/* Price */}
+                            <div className="text-right shrink-0">
+                              <span className="font-bold text-primary text-sm">{product.price}₽</span>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                      
+                      <Link to="/pet-shop">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-3 gap-2"
+                        >
+                          <ShoppingBag className="w-4 h-4" />
+                          Открыть магазин
+                        </Button>
+                      </Link>
+                    </motion.div>
                   )}
                 </div>
 

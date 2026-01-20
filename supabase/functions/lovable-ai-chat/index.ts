@@ -1,11 +1,37 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Helper to fetch products for recommendations
+async function fetchProductsForRecommendation(): Promise<string> {
+  try {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: products, error } = await supabase
+      .from('pet_products')
+      .select('id, name, name_ru, category, price, description_ru, image_url')
+      .eq('in_stock', true)
+      .limit(50);
+    
+    if (error || !products) return '';
+    
+    const productList = products.map(p => 
+      `- ID:${p.id} | ${p.name_ru} | Категория: ${p.category} | Цена: ${p.price}₽ | ${p.description_ru || ''}`
+    ).join('\n');
+    
+    return `\n\nДоступные товары в магазине для рекомендаций:\n${productList}`;
+  } catch (e) {
+    console.error('Error fetching products:', e);
+    return '';
+  }
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -30,8 +56,19 @@ serve(async (req) => {
       );
     }
 
-    // Default system prompt for pet shop assistant
-    const systemPrompt = options?.systemPrompt || `Ты — дружелюбный и знающий помощник зоомагазина PetShop. 
+    // Check if images are present (for product recommendations)
+    const hasImages = messages.some((msg: { content: string | Array<{ type: string }> }) => 
+      Array.isArray(msg.content) && msg.content.some((part: { type: string }) => part.type === 'image_url')
+    );
+
+    // Fetch products for recommendations when analyzing images
+    let productContext = '';
+    if (hasImages && options?.includeProductRecommendations !== false) {
+      productContext = await fetchProductsForRecommendation();
+    }
+
+    // Default system prompt for pet shop assistant with product recommendations
+    const baseSystemPrompt = options?.systemPrompt || `Ты — дружелюбный и знающий помощник зоомагазина PetShop. 
 Ты помогаешь с вопросами о:
 - Уходе за питомцами (кормление, здоровье, воспитание)
 - Выборе товаров для животных
@@ -39,6 +76,24 @@ serve(async (req) => {
 - Игровых советах для PetShop Tycoon
 
 Отвечай кратко и по делу, используй эмодзи для дружелюбности.`;
+
+    // Enhanced prompt for image analysis with product recommendations
+    const imageAnalysisInstructions = hasImages ? `
+
+ВАЖНО: При анализе фото питомца:
+1. Определи породу/вид животного
+2. Оцени примерный возраст
+3. Отметь видимые особенности (окрас, размер)
+4. Дай рекомендации по уходу
+
+ОБЯЗАТЕЛЬНО: В конце ответа добавь секцию рекомендаций товаров в формате:
+---PRODUCT_RECOMMENDATIONS---
+[{"id": "product_id", "reason": "Почему этот товар подходит"}]
+---END_RECOMMENDATIONS---
+
+Выбери 2-4 наиболее подходящих товара из списка ниже, основываясь на виде/породе питомца.${productContext}` : '';
+
+    const systemPrompt = baseSystemPrompt + imageAnalysisInstructions;
 
     // Process messages to handle image content
     const processedMessages = messages.map((msg: { role: string; content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> }) => {
@@ -67,11 +122,6 @@ serve(async (req) => {
       { role: 'system', content: systemPrompt },
       ...processedMessages
     ];
-
-    // Use vision-capable model when images are present
-    const hasImages = messages.some((msg: { content: string | Array<{ type: string }> }) => 
-      Array.isArray(msg.content) && msg.content.some((part: { type: string }) => part.type === 'image_url')
-    );
     
     // Use Gemini 2.5 Pro for multimodal (images), otherwise flash for speed
     const model = hasImages 
@@ -135,7 +185,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model,
         messages: allMessages,
-        max_tokens: options?.maxTokens || 1000,
+        max_tokens: options?.maxTokens || 2000, // Increased for product recommendations
         temperature: options?.temperature || 0.7,
       }),
     });
@@ -164,12 +214,27 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    let content = data.choices?.[0]?.message?.content || '';
+    let productRecommendations: Array<{id: string, reason: string}> = [];
 
-    console.log('Lovable AI response received');
+    // Extract product recommendations from response
+    const recMatch = content.match(/---PRODUCT_RECOMMENDATIONS---\n?([\s\S]*?)\n?---END_RECOMMENDATIONS---/);
+    if (recMatch) {
+      try {
+        productRecommendations = JSON.parse(recMatch[1].trim());
+        // Remove the recommendation markers from the displayed content
+        content = content.replace(/---PRODUCT_RECOMMENDATIONS---[\s\S]*?---END_RECOMMENDATIONS---/, '').trim();
+      } catch (e) {
+        console.error('Error parsing product recommendations:', e);
+      }
+    }
+
+    console.log('Lovable AI response received, recommendations:', productRecommendations.length);
     return new Response(
       JSON.stringify({
         success: true,
-        content: data.choices?.[0]?.message?.content,
+        content,
+        productRecommendations,
         model: data.model,
         usage: data.usage,
       }),
