@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.claim-gift]
 verify_jwt = true
+
+[functions.lovable-ai-chat]
+verify_jwt = false
