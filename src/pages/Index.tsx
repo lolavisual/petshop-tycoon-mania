@@ -457,12 +457,10 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
     return 'from-primary to-accent';
   };
 
-  const onTap = async () => {
+  const onTap = async (petValue: number = 1) => {
     const now = Date.now();
     
-    // Звуковые эффекты
-    playTap();
-    setTimeout(() => playCrystal(), 50);
+    // Звуки теперь воспроизводятся в ChaoticPets по редкости
     
     // Комбо логика
     if (now - lastTapTime < 1000) {
@@ -479,14 +477,16 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
     }, 1500);
     setComboTimer(newTimer);
     
+    // Передаём множитель ценности питомца (применяется вместе с комбо на сервере)
     const result = await handleClick();
     
-    // Update quest progress for clicks
-    onQuestProgress?.('clicks', 1);
+    // Update quest progress for clicks (учитываем ценность питомца)
+    onQuestProgress?.('clicks', petValue);
     
     // Update quest progress for crystals earned
     if (result?.crystalsEarned) {
-      onQuestProgress?.('crystals_earned', result.crystalsEarned);
+      // Применяем множитель редкости к прогрессу квестов
+      onQuestProgress?.('crystals_earned', result.crystalsEarned * petValue);
     }
   };
 
