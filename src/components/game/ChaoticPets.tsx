@@ -83,24 +83,32 @@ const ChaoticPets = ({ onTap, comboCount }: ChaoticPetsProps) => {
     setPets(initialPets);
     setPetIdCounter(5);
 
-    // Спавн новых питомцев каждые 1-2 секунды
+    // Спавн новых питомцев каждые 800мс
     const spawnInterval = setInterval(() => {
       setPets(prev => {
         // Максимум 8 питомцев одновременно
         if (prev.length >= 8) return prev;
-        const petEmoji = PET_EMOJIS[Math.floor(Math.random() * PET_EMOJIS.length)];
-        const newPet: FloatingPet = {
-          id: Date.now() + Math.random(),
-          x: 10 + Math.random() * 70,
-          y: 15 + Math.random() * 50,
-          emoji: petEmoji.emoji,
-          size: 2.5 + Math.random() * 1.5,
-          duration: 4 + Math.random() * 2,
-          delay: 0,
-        };
-        return [...prev, newPet];
+        
+        // Если питомцев мало, спавним сразу несколько
+        const petsToSpawn = prev.length < 3 ? 2 : 1;
+        const newPets: FloatingPet[] = [];
+        
+        for (let i = 0; i < petsToSpawn; i++) {
+          const petEmoji = PET_EMOJIS[Math.floor(Math.random() * PET_EMOJIS.length)];
+          newPets.push({
+            id: Date.now() + Math.random() + i,
+            x: 10 + Math.random() * 70,
+            y: 15 + Math.random() * 50,
+            emoji: petEmoji.emoji,
+            size: 2.5 + Math.random() * 1.5,
+            duration: 4 + Math.random() * 2,
+            delay: 0,
+          });
+        }
+        
+        return [...prev, ...newPets].slice(0, 8);
       });
-    }, 1500);
+    }, 800);
 
     return () => clearInterval(spawnInterval);
   }, []);
