@@ -187,49 +187,155 @@ const FirecrawlImportTab = ({ onImportProducts }: FirecrawlImportTabProps) => {
     }
   };
 
-  // Parse products from markdown content
+  // Enhanced price extraction with multiple formats
+  const extractPrice = (text: string): number | undefined => {
+    // Multiple price patterns for Russian e-commerce
+    const patterns = [
+      /(\d[\d\s]*[.,]?\d*)\s*(?:₽|руб\.?|RUB|р\.)/gi,      // Standard: 1234 ₽, 1234 руб
+      /(?:цена|price|стоимость)[:\s]*(\d[\d\s]*[.,]?\d*)/gi, // Price label: Цена: 1234
+      /(\d{1,3}(?:[\s,]\d{3})*(?:[.,]\d{2})?)\s*(?:₽|руб)/gi, // Formatted: 1 234,00 ₽
+      /(?:от|от\s)(\d[\d\s]*)/gi,                            // From price: от 1234
+    ];
+
+    for (const pattern of patterns) {
+      const matches = text.matchAll(pattern);
+      for (const match of matches) {
+        const priceStr = match[1]
+          .replace(/\s/g, '')
+          .replace(',', '.');
+        const price = parseFloat(priceStr);
+        if (price > 0 && price < 1000000) { // Sanity check
+          return price;
+        }
+      }
+    }
+    return undefined;
+  };
+
+  // Enhanced image URL extraction
+  const extractImageUrl = (text: string, baseUrl: string): string | undefined => {
+    const patterns = [
+      /!\[.*?\]\((https?:\/\/[^\s)]+\.(?:jpg|jpeg|png|gif|webp)[^\s)]*)\)/gi, // Markdown images
+      /<img[^>]+src=["']([^"']+\.(?:jpg|jpeg|png|gif|webp)[^"']*)/gi,         // HTML img tags
+      /(https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|gif|webp))/gi,                 // Direct URLs
+      /(?:src|data-src)=["']([^"']+\.(?:jpg|jpeg|png|gif|webp)[^"']*)/gi,     // Lazy load images
+    ];
+
+    for (const pattern of patterns) {
+      const match = pattern.exec(text);
+      if (match) {
+        let imgUrl = match[1];
+        // Handle relative URLs
+        if (imgUrl.startsWith('/')) {
+          try {
+            const base = new URL(baseUrl);
+            imgUrl = `${base.origin}${imgUrl}`;
+          } catch {
+            // Keep original if URL parsing fails
+          }
+        }
+        return imgUrl;
+      }
+    }
+    return undefined;
+  };
+
+  // Extract product name from various formats
+  const extractProductName = (text: string): string | undefined => {
+    // Clean markdown headers
+    if (text.startsWith('#')) {
+      return text.replace(/^#+\s*/, '').trim();
+    }
+    
+    // Try to extract from bold/strong text
+    const boldMatch = text.match(/\*\*([^*]+)\*\*|__([^_]+)__/);
+    if (boldMatch) {
+      return (boldMatch[1] || boldMatch[2]).trim();
+    }
+
+    // Try to find product-like text (avoid navigation links)
+    const cleanText = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
+    if (cleanText.length > 10 && cleanText.length < 200 && !cleanText.includes('|')) {
+      return cleanText;
+    }
+
+    return undefined;
+  };
+
+  // Parse products from markdown content with improved recognition
   const parseProductsFromMarkdown = (markdown: string, sourceUrl: string): ScrapedProduct[] => {
     const products: ScrapedProduct[] = [];
+    const seenNames = new Set<string>();
     
-    // Simple heuristic: look for price patterns and nearby text
-    const pricePattern = /(\d[\d\s]*[.,]?\d*)\s*(?:₽|руб|RUB|р\.)/gi;
-    const lines = markdown.split('\n');
+    // Split into sections (by headers or double newlines)
+    const sections = markdown.split(/(?=^#{1,3}\s)|(?:\n{2,})/m);
     
-    let currentProduct: Partial<ScrapedProduct> = {};
-    
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
+    for (const section of sections) {
+      const trimmed = section.trim();
+      if (!trimmed || trimmed.length < 20) continue;
 
-      // Check for headers (potential product names)
-      if (trimmed.startsWith('#')) {
-        if (currentProduct.name && currentProduct.price) {
-          products.push(currentProduct as ScrapedProduct);
-        }
-        currentProduct = {
-          name: trimmed.replace(/^#+\s*/, ''),
-          category: detectCategory(trimmed),
+      // Try to extract product info from this section
+      const name = extractProductName(trimmed);
+      if (!name || seenNames.has(name.toLowerCase())) continue;
+
+      const price = extractPrice(trimmed);
+      const imageUrl = extractImageUrl(trimmed, sourceUrl);
+      const category = detectCategory(trimmed);
+
+      // Only add if we have at least a name and price OR name and image
+      if (name && (price || imageUrl)) {
+        seenNames.add(name.toLowerCase());
+        products.push({
+          name,
+          price,
+          image_url: imageUrl,
+          category,
           url: sourceUrl,
-        };
-      }
-
-      // Check for prices
-      const priceMatch = trimmed.match(pricePattern);
-      if (priceMatch && currentProduct.name) {
-        const priceStr = priceMatch[0].replace(/[^\d.,]/g, '').replace(',', '.');
-        currentProduct.price = parseFloat(priceStr) || undefined;
-      }
-
-      // Check for image URLs
-      const imgMatch = trimmed.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/);
-      if (imgMatch && currentProduct.name) {
-        currentProduct.image_url = imgMatch[1];
+          description: trimmed.slice(0, 200).replace(/[#*_\[\]]/g, '').trim(),
+        });
       }
     }
 
-    // Add last product
-    if (currentProduct.name) {
-      products.push(currentProduct as ScrapedProduct);
+    // Second pass: try line-by-line for list-style products
+    if (products.length === 0) {
+      const lines = markdown.split('\n');
+      let currentProduct: Partial<ScrapedProduct> = {};
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const price = extractPrice(line);
+        const imgUrl = extractImageUrl(line, sourceUrl);
+        const name = extractProductName(line);
+
+        if (name && !seenNames.has(name.toLowerCase())) {
+          // Save previous product if valid
+          if (currentProduct.name && (currentProduct.price || currentProduct.image_url)) {
+            products.push(currentProduct as ScrapedProduct);
+          }
+          
+          seenNames.add(name.toLowerCase());
+          currentProduct = {
+            name,
+            category: detectCategory(name),
+            url: sourceUrl,
+          };
+        }
+
+        if (price && currentProduct.name) {
+          currentProduct.price = price;
+        }
+
+        if (imgUrl && currentProduct.name) {
+          currentProduct.image_url = imgUrl;
+        }
+      }
+
+      // Add last product
+      if (currentProduct.name && (currentProduct.price || currentProduct.image_url)) {
+        products.push(currentProduct as ScrapedProduct);
+      }
     }
 
     return products;
