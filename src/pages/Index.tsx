@@ -5,6 +5,7 @@ import { useGameState } from '@/hooks/useGameState';
 import { useTelegramTheme } from '@/hooks/useTelegramTheme';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { usePetCollection } from '@/hooks/usePetCollection';
+import { useCaughtPetsStats } from '@/hooks/useCaughtPetsStats';
 import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3, Package } from 'lucide-react';
 import ShopPage from '@/components/ShopPage';
 import ArticlesPage from '@/components/ArticlesPage';
@@ -431,8 +432,7 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
 const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?: number) => void }) => {
   const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
   const { playTap, playCrystal, playChest } = useSoundEffects();
-  
-  // Комбо система
+  const { recordCatch } = useCaughtPetsStats();
   
   // Комбо система
   const [comboCount, setComboCount] = useState(0);
@@ -457,7 +457,7 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
     return 'from-primary to-accent';
   };
 
-  const onTap = async (petValue: number = 1) => {
+  const onTap = async (petValue: number = 1, rarity: string = 'common', streakBonus: number = 1) => {
     const now = Date.now();
     
     // Звуки теперь воспроизводятся в ChaoticPets по редкости
@@ -480,13 +480,21 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
     // Передаём множитель ценности питомца (применяется вместе с комбо на сервере)
     const result = await handleClick();
     
-    // Update quest progress for clicks (учитываем ценность питомца)
-    onQuestProgress?.('clicks', petValue);
+    // Общий множитель = редкость * стрик бонус
+    const totalMultiplier = petValue * streakBonus;
+    
+    // Update quest progress for clicks (учитываем ценность питомца и стрик)
+    onQuestProgress?.('clicks', totalMultiplier);
     
     // Update quest progress for crystals earned
     if (result?.crystalsEarned) {
-      // Применяем множитель редкости к прогрессу квестов
-      onQuestProgress?.('crystals_earned', result.crystalsEarned * petValue);
+      // Применяем множитель редкости и стрика к прогрессу квестов
+      onQuestProgress?.('crystals_earned', result.crystalsEarned * totalMultiplier);
+    }
+    
+    // Записываем статистику поимки по редкости
+    if (rarity && (rarity === 'common' || rarity === 'rare' || rarity === 'epic' || rarity === 'legendary')) {
+      recordCatch(rarity as 'common' | 'rare' | 'epic' | 'legendary');
     }
   };
 

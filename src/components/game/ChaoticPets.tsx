@@ -74,7 +74,7 @@ interface CrystalEffect {
 }
 
 interface ChaoticPetsProps {
-  onTap: (value: number) => Promise<void>;
+  onTap: (value: number, rarity: PetRarity, streakBonus: number) => Promise<void>;
   comboCount: number;
 }
 
@@ -86,11 +86,28 @@ const RARITY_COLORS: Record<PetRarity, { glow: string; bg: string; text: string 
   legendary: { glow: 'rgba(251, 191, 36, 0.8)', bg: 'bg-yellow-500/20', text: 'text-yellow-400' },
 };
 
+// Стрик бонусы
+interface StreakBonusEffect {
+  id: number;
+  label: string;
+}
+
 const ChaoticPets = ({ onTap, comboCount }: ChaoticPetsProps) => {
   const [pets, setPets] = useState<FloatingPet[]>([]);
   const [crystalEffects, setCrystalEffects] = useState<CrystalEffect[]>([]);
   const [effectId, setEffectId] = useState(0);
+  const [legendaryStreak, setLegendaryStreak] = useState(0);
+  const [streakBonusEffect, setStreakBonusEffect] = useState<StreakBonusEffect | null>(null);
   const { playTap, playCrystal, playChest, playLevelUp } = useSoundEffects();
+
+  // Получить бонус за стрик легендарных
+  const getLegendaryStreakBonus = useCallback((streak: number) => {
+    if (streak >= 5) return { multiplier: 5, label: '🔥🔥🔥🔥🔥 МЕГА БОНУС x5!' };
+    if (streak >= 4) return { multiplier: 4, label: '🔥🔥🔥🔥 СУПЕР x4!' };
+    if (streak >= 3) return { multiplier: 3, label: '🔥🔥🔥 БОНУС x3!' };
+    if (streak >= 2) return { multiplier: 2, label: '🔥🔥 x2!' };
+    return { multiplier: 1, label: '' };
+  }, []);
 
   // Генерация случайного питомца
   const createPet = useCallback((id: number): FloatingPet => {
@@ -166,6 +183,30 @@ const ChaoticPets = ({ onTap, comboCount }: ChaoticPetsProps) => {
     // Звук по редкости
     playRaritySound(pet.pet.rarity);
     
+    // Обновляем стрик легендарных
+    let currentStreak = legendaryStreak;
+    let streakBonus = 1;
+    
+    if (pet.pet.rarity === 'legendary') {
+      currentStreak = legendaryStreak + 1;
+      setLegendaryStreak(currentStreak);
+      
+      // Показываем бонус если стрик >= 2
+      const bonus = getLegendaryStreakBonus(currentStreak);
+      streakBonus = bonus.multiplier;
+      
+      if (currentStreak >= 2) {
+        setStreakBonusEffect({ id: Date.now(), label: bonus.label });
+        setTimeout(() => setStreakBonusEffect(null), 1500);
+        
+        // Дополнительные звуки для стрика
+        setTimeout(() => playLevelUp(), 200);
+      }
+    } else {
+      // Сброс стрика
+      setLegendaryStreak(0);
+    }
+    
     // Добавляем эффект кристалла
     const newEffectId = effectId;
     setEffectId(prev => prev + 1);
@@ -173,7 +214,7 @@ const ChaoticPets = ({ onTap, comboCount }: ChaoticPetsProps) => {
       id: newEffectId, 
       x, 
       y, 
-      value: pet.pet.value,
+      value: pet.pet.value * streakBonus,
       rarity: pet.pet.rarity 
     }]);
     
@@ -185,8 +226,8 @@ const ChaoticPets = ({ onTap, comboCount }: ChaoticPetsProps) => {
     // Удаляем питомца
     setPets(prev => prev.filter(p => p.id !== pet.id));
 
-    // Вызываем обработчик тапа с ценностью питомца
-    await onTap(pet.pet.value);
+    // Вызываем обработчик тапа с ценностью питомца и бонусом стрика
+    await onTap(pet.pet.value, pet.pet.rarity, streakBonus);
   };
 
   // Цвет свечения в зависимости от комбо
@@ -235,6 +276,42 @@ const ChaoticPets = ({ onTap, comboCount }: ChaoticPetsProps) => {
           ✨ Лови питомцев! Редкие дают больше! ✨
         </span>
       </motion.div>
+
+      {/* Стрик легендарных */}
+      <AnimatePresence>
+        {legendaryStreak >= 1 && (
+          <motion.div
+            className="absolute top-12 left-1/2 -translate-x-1/2 z-20"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+          >
+            <div className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-2 shadow-lg">
+              <span>⭐</span>
+              <span>ЛЕГЕНДАРНЫЙ СТРИК: {legendaryStreak}</span>
+              {legendaryStreak >= 2 && <span>({getLegendaryStreakBonus(legendaryStreak).multiplier}x)</span>}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Эффект бонуса стрика */}
+      <AnimatePresence>
+        {streakBonusEffect && (
+          <motion.div
+            key={streakBonusEffect.id}
+            className="absolute top-1/3 left-1/2 -translate-x-1/2 z-30 pointer-events-none"
+            initial={{ opacity: 0, scale: 0.5, y: 0 }}
+            animate={{ opacity: [0, 1, 1, 0], scale: [0.5, 1.5, 1.5, 1], y: -50 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5 }}
+          >
+            <div className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-black px-6 py-3 rounded-2xl text-lg font-black shadow-2xl">
+              {streakBonusEffect.label}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Легенда редкости */}
       <motion.div
