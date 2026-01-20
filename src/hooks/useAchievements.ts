@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useGameState } from './useGameState';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { useCaughtPetsStats } from './useCaughtPetsStats';
-interface Achievement {
+
+export interface Achievement {
   id: string;
   name: string;
   name_ru: string;
@@ -29,6 +30,9 @@ export const useAchievements = () => {
   const { profile, refreshProfile } = useGameState();
   const queryClient = useQueryClient();
   const { stats: caughtPetsStats } = useCaughtPetsStats();
+  
+  // Для анимированного оверлея при разблокировке
+  const [newlyUnlockedAchievement, setNewlyUnlockedAchievement] = useState<Achievement | null>(null);
 
   // Fetch all achievements
   const { data: achievements = [], isLoading: achievementsLoading } = useQuery({
@@ -147,10 +151,16 @@ export const useAchievements = () => {
     achievements.forEach(achievement => {
       if (!unlockedIds.has(achievement.id) && checkAchievementRequirement(achievement)) {
         unlockMutation.mutate(achievement.id);
-        toast.success(`🏆 Достижение разблокировано: ${achievement.name_ru}!`);
+        // Показываем анимированный оверлей
+        setNewlyUnlockedAchievement(achievement);
       }
     });
   }, [profile?.level, profile?.crystals, profile?.diamonds, profile?.streak_days, profile?.pet_changes, profile?.quests_completed, achievements, userAchievements, caughtPetsStats.legendary, caughtPetsStats.maxLegendaryStreak]);
+  
+  // Закрыть оверлей достижения
+  const dismissUnlockedAchievement = useCallback(() => {
+    setNewlyUnlockedAchievement(null);
+  }, []);
 
   // Get achievement status
   const getAchievementStatus = useCallback((achievement: Achievement) => {
@@ -223,5 +233,7 @@ export const useAchievements = () => {
     unlockedCount: userAchievements.length,
     totalCount: achievements.length,
     unclaimedCount,
+    newlyUnlockedAchievement,
+    dismissUnlockedAchievement,
   };
 };

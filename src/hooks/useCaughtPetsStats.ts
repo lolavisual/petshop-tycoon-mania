@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useGameState } from './useGameState';
 
 const STORAGE_KEY = 'petshop_caught_pets_stats';
 
@@ -25,6 +27,7 @@ const DEFAULT_STATS: CaughtPetsStats = {
 };
 
 export const useCaughtPetsStats = () => {
+  const { profile } = useGameState();
   const [stats, setStats] = useState<CaughtPetsStats>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -38,6 +41,26 @@ export const useCaughtPetsStats = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
   }, [stats]);
+
+  // Синхронизация с БД
+  const syncToDatabase = useCallback(async (newStats: CaughtPetsStats) => {
+    if (!profile?.id) return;
+    
+    try {
+      await supabase
+        .from('profiles')
+        .update({
+          caught_common: newStats.common,
+          caught_rare: newStats.rare,
+          caught_epic: newStats.epic,
+          caught_legendary: newStats.legendary,
+          max_legendary_streak: newStats.maxLegendaryStreak,
+        })
+        .eq('id', profile.id);
+    } catch (error) {
+      console.error('Error syncing caught pets stats:', error);
+    }
+  }, [profile?.id]);
 
   // Записать поимку питомца
   const recordCatch = useCallback((rarity: 'common' | 'rare' | 'epic' | 'legendary') => {
@@ -60,9 +83,12 @@ export const useCaughtPetsStats = () => {
         newStats.legendaryStreak = 0;
       }
       
+      // Синхронизируем с БД
+      syncToDatabase(newStats);
+      
       return newStats;
     });
-  }, []);
+  }, [syncToDatabase]);
 
   // Получить бонус за стрик легендарных
   const getLegendaryStreakBonus = useCallback(() => {

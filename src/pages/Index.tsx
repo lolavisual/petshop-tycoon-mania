@@ -16,6 +16,7 @@ import LeaderboardPage from '@/components/LeaderboardPage';
 import ProfilePage from '@/components/ProfilePage';
 import { TitlesPage } from '@/components/TitlesPage';
 import { LootboxPage } from '@/components/LootboxPage';
+import AchievementUnlockOverlay from '@/components/AchievementUnlockOverlay';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useDailyQuests } from '@/hooks/useDailyQuests';
 import { useFriends } from '@/hooks/useFriends';
@@ -508,9 +509,11 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
       onQuestProgress?.('crystals_earned', result.crystalsEarned * totalMultiplier);
     }
     
-    // Записываем статистику поимки по редкости
+    // Записываем статистику поимки по редкости и обновляем квесты ловли
     if (rarity && (rarity === 'common' || rarity === 'rare' || rarity === 'epic' || rarity === 'legendary')) {
       recordCatch(rarity as 'common' | 'rare' | 'epic' | 'legendary');
+      // Обновляем квесты ловли питомцев
+      onQuestProgress?.(`catch_${rarity}`, 1);
     }
   };
 
@@ -620,7 +623,7 @@ const Index = () => {
   const { loading, error, profile } = useGameState();
   const { isDark, toggleTheme } = useTelegramTheme();
   const { isMuted, toggleMute } = useSoundEffects();
-  const { unclaimedCount } = useAchievements();
+  const { unclaimedCount, newlyUnlockedAchievement, dismissUnlockedAchievement } = useAchievements();
   const { unclaimedCount: unclaimedQuestsCount, updateQuestProgress } = useDailyQuests(profile?.id);
   const { unclaimedGiftsCount } = useFriends(profile?.id);
   
@@ -651,6 +654,11 @@ const Index = () => {
     <div className={`min-h-screen pb-24 relative ${isDemoMode ? 'pt-16' : ''}`}>
       <ParallaxBackground />
       
+      {/* Achievement Unlock Overlay */}
+      <AchievementUnlockOverlay 
+        achievement={newlyUnlockedAchievement} 
+        onClose={dismissUnlockedAchievement} 
+      />
       {/* Демо баннер */}
       {isDemoMode && (
         <DemoBanner onShowOnboarding={() => setShowOnboarding(true)} />
