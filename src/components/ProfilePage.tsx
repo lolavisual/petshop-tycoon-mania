@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import PetSelector, { getPetEmoji } from '@/components/game/PetSelector';
 import { useRanks } from '@/hooks/useRanks';
 import PetCollectionStats from '@/components/profile/PetCollectionStats';
+import CaughtPetsStats from '@/components/profile/CaughtPetsStats';
 
 interface ProfilePageProps {
   setCurrentPage?: (page: string) => void;
@@ -281,8 +282,12 @@ const ProfilePage = ({ setCurrentPage }: ProfilePageProps) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="space-y-3"
+            className="space-y-6"
           >
+            {/* Статистика пойманных питомцев */}
+            <CaughtPetsStats />
+            
+            {/* Коллекция питомцев */}
             <PetCollectionStats 
               userId={profile.id} 
               currentPetType={profile.pet_type || 'dog'} 
