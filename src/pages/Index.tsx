@@ -647,6 +647,9 @@ const Index = () => {
   const { unclaimedGiftsCount } = useFriends(profile?.id);
   const { activeEvent, updateProgress: updateSeasonalProgress } = useSeasonalEvents();
   const { canClaimToday } = useDailyLoginRewards();
+
+  const DAILY_REWARDS_DISMISSED_KEY = 'petshop_daily_rewards_dismissed_date';
+  const getTodayKey = () => new Date().toISOString().split('T')[0];
   
   // Демо-режим и онбординг
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -659,12 +662,23 @@ const Index = () => {
 
   // Показываем ежедневные награды при загрузке если можно забрать
   useEffect(() => {
-    if (!loading && canClaimToday()) {
+    const dismissedFor = localStorage.getItem(DAILY_REWARDS_DISMISSED_KEY);
+    if (!loading && canClaimToday() && dismissedFor !== getTodayKey()) {
       // Небольшая задержка для плавности
       const timer = setTimeout(() => setShowDailyRewards(true), 1000);
       return () => clearTimeout(timer);
     }
   }, [loading, canClaimToday]);
+
+  const handleCloseDailyRewards = () => {
+    setShowDailyRewards(false);
+    // Если пользователь закрыл окно — не показываем автопопап повторно в этот день
+    try {
+      localStorage.setItem(DAILY_REWARDS_DISMISSED_KEY, getTodayKey());
+    } catch {
+      // ignore
+    }
+  };
 
   useEffect(() => {
     initTelegramWebApp();
@@ -707,7 +721,7 @@ const Index = () => {
       {/* Daily Login Rewards Modal */}
       <DailyLoginRewardsModal 
         isOpen={showDailyRewards} 
-        onClose={() => setShowDailyRewards(false)} 
+        onClose={handleCloseDailyRewards} 
       />
 
       {/* Seasonal Event Modal */}
