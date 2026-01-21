@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TelegramAuthGate } from "@/components/TelegramAuthGate";
+import { DailyLoginRewardsProvider } from "@/contexts/DailyLoginRewardsContext";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import PetConsultant from "./pages/PetConsultant";
@@ -18,13 +19,15 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <TelegramAuthGate>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/consultant" element={<PetConsultant />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <DailyLoginRewardsProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/consultant" element={<PetConsultant />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </DailyLoginRewardsProvider>
         </TelegramAuthGate>
       </BrowserRouter>
     </TooltipProvider>
