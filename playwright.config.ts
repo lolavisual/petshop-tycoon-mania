@@ -10,11 +10,23 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:8080',
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixels: 100,
+      threshold: 0.2,
+    },
+  },
+  snapshotDir: './e2e/screenshots',
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'mobile',
+      use: { ...devices['iPhone 13'] },
     },
   ],
   webServer: {
