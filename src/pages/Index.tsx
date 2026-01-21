@@ -7,7 +7,7 @@ import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { usePetCollection } from '@/hooks/usePetCollection';
 import { useCaughtPetsStats } from '@/hooks/useCaughtPetsStats';
 import { useSeasonalEvents } from '@/hooks/useSeasonalEvents';
-import { useDailyLoginRewards } from '@/hooks/useDailyLoginRewards';
+import { useDailyLoginRewardsContext, isDismissedToday, setDismissedToday } from '@/contexts/DailyLoginRewardsContext';
 import { usePremium } from '@/hooks/usePremium';
 import { Sparkles, Gift, User, ShoppingBag, FileText, Crown, Moon, Sun, Volume2, VolumeX, Trophy, Target, BarChart3, Package, Calendar, Snowflake, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -646,10 +646,7 @@ const Index = () => {
   const { unclaimedCount: unclaimedQuestsCount, updateQuestProgress } = useDailyQuests(profile?.id);
   const { unclaimedGiftsCount } = useFriends(profile?.id);
   const { activeEvent, updateProgress: updateSeasonalProgress } = useSeasonalEvents();
-  const { canClaimToday } = useDailyLoginRewards();
-
-  const DAILY_REWARDS_DISMISSED_KEY = 'petshop_daily_rewards_dismissed_date';
-  const getTodayKey = () => new Date().toISOString().split('T')[0];
+  const { canClaimToday, loading: dailyRewardsLoading } = useDailyLoginRewardsContext();
   
   // Демо-режим и онбординг
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -662,22 +659,17 @@ const Index = () => {
 
   // Показываем ежедневные награды при загрузке если можно забрать
   useEffect(() => {
-    const dismissedFor = localStorage.getItem(DAILY_REWARDS_DISMISSED_KEY);
-    if (!loading && canClaimToday() && dismissedFor !== getTodayKey()) {
+    if (!loading && !dailyRewardsLoading && canClaimToday() && !isDismissedToday()) {
       // Небольшая задержка для плавности
       const timer = setTimeout(() => setShowDailyRewards(true), 1000);
       return () => clearTimeout(timer);
     }
-  }, [loading, canClaimToday]);
+  }, [loading, dailyRewardsLoading, canClaimToday]);
 
   const handleCloseDailyRewards = () => {
     setShowDailyRewards(false);
     // Если пользователь закрыл окно — не показываем автопопап повторно в этот день
-    try {
-      localStorage.setItem(DAILY_REWARDS_DISMISSED_KEY, getTodayKey());
-    } catch {
-      // ignore
-    }
+    setDismissedToday();
   };
 
   useEffect(() => {

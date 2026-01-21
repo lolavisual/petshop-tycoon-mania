@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gift, Check, Lock, Sparkles } from 'lucide-react';
-import { useDailyLoginRewards } from '@/hooks/useDailyLoginRewards';
+import { X, Gift, Check, Sparkles } from 'lucide-react';
+import { useDailyLoginRewardsContext } from '@/contexts/DailyLoginRewardsContext';
 import { Button } from '@/components/ui/button';
 
 interface DailyLoginRewardsModalProps {
@@ -9,7 +9,7 @@ interface DailyLoginRewardsModalProps {
 }
 
 export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsModalProps) {
-  const { rewards, userProgress, loading, claiming, canClaimToday, claimReward } = useDailyLoginRewards();
+  const { rewards, userProgress, loading, claiming, canClaimToday, claimReward } = useDailyLoginRewardsContext();
 
   const handleClaim = async () => {
     const result = await claimReward();
@@ -22,12 +22,6 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
   const currentDay = userProgress?.current_day || 1;
   const canClaim = canClaimToday();
 
-  const rarityColors: Record<string, string> = {
-    crystals: 'from-blue-500 to-cyan-400',
-    diamonds: 'from-purple-500 to-pink-400',
-    stones: 'from-amber-500 to-orange-400'
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -36,6 +30,7 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          data-testid="daily-rewards-modal"
         >
           {/* Backdrop */}
           <motion.div
@@ -77,6 +72,7 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
                 }}
                 className="absolute top-4 right-4 p-2 rounded-full bg-muted/50 hover:bg-muted transition-colors z-50 cursor-pointer"
                 type="button"
+                data-testid="close-daily-rewards"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -88,7 +84,6 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
                 {rewards.map((reward) => {
                   const isPast = reward.day_number < currentDay;
                   const isCurrent = reward.day_number === currentDay;
-                  const isFuture = reward.day_number > currentDay;
                   const isClaimed = isPast || (isCurrent && !canClaim);
 
                   return (
@@ -106,6 +101,7 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
                         boxShadow: ['0 0 20px rgba(var(--primary), 0.3)', '0 0 30px rgba(var(--primary), 0.5)', '0 0 20px rgba(var(--primary), 0.3)']
                       } : {}}
                       transition={{ duration: 1.5, repeat: Infinity }}
+                      data-testid={`reward-day-${reward.day_number}`}
                     >
                       {/* Day label */}
                       <span className="text-[10px] font-bold text-muted-foreground mb-0.5">
@@ -161,6 +157,7 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
                 }}
                 disabled={!canClaim || claiming || loading}
                 type="button"
+                data-testid="claim-reward-button"
                 className={`w-full h-14 text-lg font-bold rounded-2xl transition-all relative z-50 ${
                   canClaim 
                     ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/30 cursor-pointer' 
