@@ -41,6 +41,7 @@ const AchievementsPage = () => {
       className="p-4 space-y-6 pb-28"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      data-testid="achievements-page"
     >
       {/* Header - Enhanced */}
       <motion.div 

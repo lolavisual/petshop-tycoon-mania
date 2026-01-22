@@ -239,6 +239,7 @@ const QuestCard = ({
                 onClick={() => onClaim(userQuest.id)}
                 disabled={isClaiming}
                 className="bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/30"
+                data-testid="quest-claim-button"
               >
                 {isClaiming ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
@@ -325,6 +326,7 @@ const DailyQuestsPage = ({ userId }: DailyQuestsPageProps) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="p-4 pb-24 space-y-4"
+      data-testid="quests-page"
     >
       <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
 

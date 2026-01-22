@@ -320,7 +320,7 @@ const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements, unclaimedQuest
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 z-50" data-testid="nav-bar">
       {/* Gradient border top */}
       <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       
@@ -334,6 +334,7 @@ const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements, unclaimedQuest
               <motion.button
                 key={tab.id}
                 type="button"
+                data-testid={`nav-${tab.id}`}
                 className={`nav-button ${isActive ? 'active' : ''}`}
                 onClick={() => {
                   hapticImpact('light');
@@ -354,6 +355,7 @@ const NavBar = ({ activeTab, setActiveTab, unclaimedAchievements, unclaimedQuest
                       initial={{ scale: 0, rotate: -180 }}
                       animate={{ scale: 1, rotate: 0 }}
                       className="notification-badge"
+                      data-testid={`nav-badge-${tab.id}`}
                     >
                       {tab.badge > 9 ? '9+' : tab.badge}
                     </motion.span>
@@ -390,6 +392,7 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
   return (
     <motion.div 
       className="stats-card"
+      data-testid="stats-bar"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
@@ -398,6 +401,7 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
         <motion.div 
           className="currency-crystal text-lg"
           whileHover={{ scale: 1.05 }}
+          data-testid="crystals-counter"
         >
           <span className="text-2xl">💎</span>
           <span>{Math.floor(crystals).toLocaleString()}</span>
@@ -405,6 +409,7 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
         <motion.div 
           className="currency-diamond text-lg"
           whileHover={{ scale: 1.05 }}
+          data-testid="diamonds-counter"
         >
           <span className="text-2xl">💠</span>
           <span>{Math.floor(diamonds).toLocaleString()}</span>
@@ -413,7 +418,7 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
       
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="font-bold flex items-center gap-2">
+          <span className="font-bold flex items-center gap-2" data-testid="level-display">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -422,9 +427,9 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
             </motion.div>
             <span className="text-gradient-primary">Уровень {level}</span>
           </span>
-          <span className="text-muted-foreground font-medium">{Math.floor(xp)}/{xpNext} XP</span>
+          <span className="text-muted-foreground font-medium" data-testid="xp-display">{Math.floor(xp)}/{xpNext} XP</span>
         </div>
-        <div className="progress-xp">
+        <div className="progress-xp" data-testid="xp-progress">
           <motion.div 
             className="progress-xp-fill"
             initial={{ width: 0 }}
@@ -551,6 +556,7 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
   return (
     <motion.div 
       className="p-4 space-y-6 relative"
+      data-testid="game-page"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
@@ -576,6 +582,7 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
             initial={{ opacity: 0, y: 20, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.8 }}
+            data-testid="combo-indicator"
           >
             <motion.div
               className={`px-4 py-2 rounded-2xl bg-gradient-to-r ${getComboColor()} text-white font-bold shadow-lg`}
@@ -600,7 +607,9 @@ const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?
       </AnimatePresence>
 
       {/* Хаотичные питомцы */}
-      <ChaoticPets onTap={onTap} comboCount={comboCount} onStreakBonus={handleStreakBonus} />
+      <div data-testid="chaotic-pets">
+        <ChaoticPets onTap={onTap} comboCount={comboCount} onStreakBonus={handleStreakBonus} />
+      </div>
       
       <div className="flex gap-2">
         <button
