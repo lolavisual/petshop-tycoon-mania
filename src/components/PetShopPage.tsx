@@ -101,6 +101,7 @@ const PetShopPage = ({ setCurrentPage }: PetShopPageProps) => {
       className="p-4 space-y-4 pb-24"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      data-testid="shop-page"
     >
       {/* Заголовок */}
       <div className="text-center">
@@ -227,6 +228,7 @@ const PetShopPage = ({ setCurrentPage }: PetShopPageProps) => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.05 }}
                   whileHover={{ y: -4 }}
+                  data-testid={`product-card-${product.id}`}
                   className={`product-card flex flex-col relative ${
                     !product.in_stock ? 'opacity-70' : ''
                   } ${promo ? 'ring-2 ring-primary/50' : ''}`}
@@ -366,6 +368,7 @@ const PetShopPage = ({ setCurrentPage }: PetShopPageProps) => {
                     {/* Кнопка заказа */}
                     <motion.button
                       type="button"
+                      data-testid={`order-button-${product.id}`}
                       className={`mt-2 w-full py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-1 ${
                         product.in_stock 
                           ? 'btn-gradient-secondary' 

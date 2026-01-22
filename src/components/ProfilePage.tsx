@@ -79,6 +79,7 @@ const ProfilePage = ({ setCurrentPage }: ProfilePageProps) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="p-4 pb-24 space-y-4"
+      data-testid="profile-page"
     >
       {/* Profile Header */}
       <motion.div
@@ -209,6 +210,7 @@ const ProfilePage = ({ setCurrentPage }: ProfilePageProps) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-3"
+            data-testid="profile-stats"
           >
             {/* Currency */}
             <div className="grid grid-cols-2 gap-3">
