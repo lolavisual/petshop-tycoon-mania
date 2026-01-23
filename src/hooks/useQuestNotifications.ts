@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { isValidUUID } from '@/lib/uuid';
 
 interface QuestNotification {
   id: string;
@@ -20,7 +21,8 @@ export const useQuestNotifications = (userId?: string) => {
   const { toast } = useToast();
 
   const loadNotifications = useCallback(async () => {
-    if (!userId) {
+    // Skip API calls for demo mode or invalid UUIDs
+    if (!userId || !isValidUUID(userId)) {
       setLoading(false);
       return;
     }
@@ -63,7 +65,7 @@ export const useQuestNotifications = (userId?: string) => {
   }, []);
 
   const markAllAsRead = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !isValidUUID(userId)) return;
 
     try {
       const { error } = await supabase
@@ -87,7 +89,7 @@ export const useQuestNotifications = (userId?: string) => {
     questType: string = 'daily',
     questId?: string
   ) => {
-    if (!userId) return;
+    if (!userId || !isValidUUID(userId)) return;
 
     try {
       const { error } = await supabase
@@ -133,7 +135,7 @@ export const useQuestNotifications = (userId?: string) => {
   }, []);
 
   const clearOldNotifications = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !isValidUUID(userId)) return;
 
     try {
       const weekAgo = new Date();
@@ -160,7 +162,7 @@ export const useQuestNotifications = (userId?: string) => {
 
   // Subscribe to realtime notifications
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !isValidUUID(userId)) return;
 
     const channel = supabase
       .channel('quest_notifications')

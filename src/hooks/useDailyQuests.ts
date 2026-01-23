@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { isValidUUID } from '@/lib/uuid';
 
 interface DailyQuest {
   id: string;
@@ -35,7 +36,8 @@ export const useDailyQuests = (userId?: string) => {
   const { toast } = useToast();
 
   const loadQuests = useCallback(async () => {
-    if (!userId) {
+    // Skip API calls for demo mode or invalid UUIDs
+    if (!userId || !isValidUUID(userId)) {
       setLoading(false);
       return;
     }
@@ -139,7 +141,7 @@ export const useDailyQuests = (userId?: string) => {
     requirementType: string,
     incrementBy: number = 1
   ) => {
-    if (!userId) return;
+    if (!userId || !isValidUUID(userId)) return;
 
     const today = new Date().toISOString().split('T')[0];
     

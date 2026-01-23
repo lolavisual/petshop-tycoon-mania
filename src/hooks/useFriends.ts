@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { isValidUUID } from '@/lib/uuid';
 
 interface Friend {
   id: string;
@@ -38,7 +39,8 @@ export const useFriends = (userId?: string) => {
   const { toast } = useToast();
 
   const loadFriends = useCallback(async () => {
-    if (!userId) {
+    // Skip API calls for demo mode or invalid UUIDs
+    if (!userId || !isValidUUID(userId)) {
       setLoading(false);
       return;
     }
