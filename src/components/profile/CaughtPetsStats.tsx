@@ -2,8 +2,12 @@ import { motion } from 'framer-motion';
 import { useCaughtPetsStats } from '@/hooks/useCaughtPetsStats';
 import { Trophy, Star, Sparkles, Flame } from 'lucide-react';
 
-const CaughtPetsStats = () => {
-  const { stats } = useCaughtPetsStats();
+interface CaughtPetsStatsProps {
+  profileId?: string;
+}
+
+const CaughtPetsStats = ({ profileId }: CaughtPetsStatsProps) => {
+  const { stats } = useCaughtPetsStats(profileId);
   
   const rarityData = [
     { 
