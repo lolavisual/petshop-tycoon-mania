@@ -446,7 +446,7 @@ const StatsBar = ({ crystals, diamonds, level, xp, xpNext }: { crystals: number;
 const GamePage = ({ onQuestProgress }: { onQuestProgress?: (type: string, value?: number) => void }) => {
   const { profile, accessories, handleClick, claimChest, canClaimChest, timeUntilChest, xpForNextLevel } = useGameState();
   const { playTap, playCrystal, playChest, playLevelUp } = useSoundEffects();
-  const { recordCatch } = useCaughtPetsStats();
+  const { recordCatch } = useCaughtPetsStats(profile?.id);
   
   // Комбо система
   const [comboCount, setComboCount] = useState(0);

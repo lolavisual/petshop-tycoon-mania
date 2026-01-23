@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useGameState } from './useGameState';
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useCaughtPetsStats } from './useCaughtPetsStats';
 
@@ -29,10 +29,14 @@ interface UserAchievement {
 export const useAchievements = () => {
   const { profile, refreshProfile } = useGameState();
   const queryClient = useQueryClient();
-  const { stats: caughtPetsStats } = useCaughtPetsStats();
+  const { stats: caughtPetsStats } = useCaughtPetsStats(profile?.id);
   
   // Для анимированного оверлея при разблокировке
   const [newlyUnlockedAchievement, setNewlyUnlockedAchievement] = useState<Achievement | null>(null);
+  
+  // Ref для отслеживания уже обработанных достижений (предотвращение бесконечного цикла)
+  const processedAchievementsRef = useRef<Set<string>>(new Set());
+  const isCheckingRef = useRef(false);
 
   // Fetch all achievements
   const { data: achievements = [], isLoading: achievementsLoading } = useQuery({
@@ -46,6 +50,8 @@ export const useAchievements = () => {
       if (error) throw error;
       return data as Achievement[];
     },
+    staleTime: 5 * 60 * 1000, // 5 минут - предотвращает частые refetch
+    refetchOnWindowFocus: false,
   });
 
   // Fetch user's unlocked achievements
@@ -63,7 +69,14 @@ export const useAchievements = () => {
       return data as UserAchievement[];
     },
     enabled: !!profile?.id,
+    staleTime: 30 * 1000, // 30 секунд
+    refetchOnWindowFocus: false,
   });
+
+  // Memoize unlocked IDs to prevent unnecessary recalculations
+  const unlockedIds = useMemo(() => {
+    return new Set(userAchievements.map(ua => ua.achievement_id));
+  }, [userAchievements]);
 
   // Check if user meets requirements for an achievement
   const checkAchievementRequirement = useCallback((achievement: Achievement): boolean => {
@@ -106,6 +119,7 @@ export const useAchievements = () => {
       if (error && !error.message.includes('duplicate')) throw error;
     },
     onSuccess: () => {
+      // Invalidate only once after success
       queryClient.invalidateQueries({ queryKey: ['user-achievements'] });
     },
   });
@@ -142,20 +156,79 @@ export const useAchievements = () => {
     },
   });
 
-  // Check and unlock new achievements automatically
+  // Check and unlock new achievements automatically - with protection against infinite loops
   useEffect(() => {
-    if (!profile || achievements.length === 0) return;
+    // Guard against multiple simultaneous checks
+    if (isCheckingRef.current) return;
+    if (!profile || achievements.length === 0 || userAchievementsLoading) return;
 
-    const unlockedIds = new Set(userAchievements.map(ua => ua.achievement_id));
+    isCheckingRef.current = true;
 
-    achievements.forEach(achievement => {
-      if (!unlockedIds.has(achievement.id) && checkAchievementRequirement(achievement)) {
-        unlockMutation.mutate(achievement.id);
-        // Показываем анимированный оверлей
-        setNewlyUnlockedAchievement(achievement);
+    const checkAchievements = () => {
+      for (const achievement of achievements) {
+        // Skip if already unlocked or already processed in this session
+        if (unlockedIds.has(achievement.id)) continue;
+        if (processedAchievementsRef.current.has(achievement.id)) continue;
+        
+        // Inline check to avoid dependency on checkAchievementRequirement
+        let meetsRequirement = false;
+        switch (achievement.requirement_type) {
+          case 'level':
+            meetsRequirement = profile.level >= achievement.requirement_value;
+            break;
+          case 'crystals':
+            meetsRequirement = profile.crystals >= achievement.requirement_value;
+            break;
+          case 'diamonds':
+            meetsRequirement = profile.diamonds >= achievement.requirement_value;
+            break;
+          case 'streak':
+            meetsRequirement = profile.streak_days >= achievement.requirement_value;
+            break;
+          case 'pet_changes':
+            meetsRequirement = (profile.pet_changes || 0) >= achievement.requirement_value;
+            break;
+          case 'quests_completed':
+            meetsRequirement = (profile.quests_completed || 0) >= achievement.requirement_value;
+            break;
+          case 'legendary_caught':
+            meetsRequirement = caughtPetsStats.legendary >= achievement.requirement_value;
+            break;
+          case 'max_legendary_streak':
+            meetsRequirement = caughtPetsStats.maxLegendaryStreak >= achievement.requirement_value;
+            break;
+        }
+        
+        if (meetsRequirement) {
+          // Mark as processed to prevent duplicate calls
+          processedAchievementsRef.current.add(achievement.id);
+          
+          unlockMutation.mutate(achievement.id);
+          // Показываем анимированный оверлей
+          setNewlyUnlockedAchievement(achievement);
+          break; // Only unlock one at a time to prevent overwhelming
+        }
       }
-    });
-  }, [profile?.level, profile?.crystals, profile?.diamonds, profile?.streak_days, profile?.pet_changes, profile?.quests_completed, achievements, userAchievements, caughtPetsStats.legendary, caughtPetsStats.maxLegendaryStreak]);
+    };
+
+    checkAchievements();
+    isCheckingRef.current = false;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    // Only primitives as dependencies to ensure stability
+    profile?.id,
+    profile?.level, 
+    profile?.crystals, 
+    profile?.diamonds, 
+    profile?.streak_days, 
+    profile?.pet_changes, 
+    profile?.quests_completed, 
+    caughtPetsStats.legendary, 
+    caughtPetsStats.maxLegendaryStreak,
+    achievements.length,
+    unlockedIds.size,
+    userAchievementsLoading,
+  ]);
   
   // Закрыть оверлей достижения
   const dismissUnlockedAchievement = useCallback(() => {

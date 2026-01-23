@@ -287,7 +287,7 @@ const ProfilePage = ({ setCurrentPage }: ProfilePageProps) => {
             className="space-y-6"
           >
             {/* Статистика пойманных питомцев */}
-            <CaughtPetsStats />
+            <CaughtPetsStats profileId={profile.id} />
             
             {/* Коллекция питомцев */}
             <PetCollectionStats 

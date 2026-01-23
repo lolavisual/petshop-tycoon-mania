@@ -105,11 +105,7 @@ export function useGameState() {
   const [error, setError] = useState<string | null>(null);
   const [isClicking, setIsClicking] = useState(false);
 
-  // Проверяем, работаем ли мы в Telegram
-  const isTelegram = typeof window !== 'undefined' && 
-    (window as any).Telegram?.WebApp?.initData?.length > 0;
-
-  // Загрузка профиля
+  // Загрузка профиля - без внешних зависимостей чтобы избежать ререндеров
   const loadProfile = useCallback(async () => {
     try {
       // Проверяем авторизацию
@@ -173,7 +169,7 @@ export function useGameState() {
     } finally {
       setLoading(false);
     }
-  }, [isTelegram]);
+  }, []); // Пустой массив зависимостей - функция стабильна
 
   // Клик
   const handleClick = useCallback(async (): Promise<ClickResult | null> => {
@@ -268,7 +264,7 @@ export function useGameState() {
     } finally {
       setIsClicking(false);
     }
-  }, [isClicking, isTelegram, profile]);
+  }, [isClicking, profile]);
 
   // Сундук
   const claimChest = useCallback(async (): Promise<ChestResult | null> => {
@@ -342,7 +338,7 @@ export function useGameState() {
       hapticNotification('error');
       return null;
     }
-  }, [isTelegram, profile]);
+  }, [profile]);
 
   // Пассивный доход
   const claimPassive = useCallback(async (): Promise<PassiveResult | null> => {

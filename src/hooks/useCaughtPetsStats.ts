@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useGameState } from './useGameState';
 
 const STORAGE_KEY = 'petshop_caught_pets_stats';
 
@@ -26,8 +25,7 @@ const DEFAULT_STATS: CaughtPetsStats = {
   lastCaughtRarity: null,
 };
 
-export const useCaughtPetsStats = () => {
-  const { profile } = useGameState();
+export const useCaughtPetsStats = (profileId?: string) => {
   const [stats, setStats] = useState<CaughtPetsStats>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -42,9 +40,10 @@ export const useCaughtPetsStats = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
   }, [stats]);
 
-  // Синхронизация с БД
-  const syncToDatabase = useCallback(async (newStats: CaughtPetsStats) => {
-    if (!profile?.id) return;
+  // Синхронизация с БД - принимает profileId как параметр вместо зависимости от useGameState
+  const syncToDatabase = useCallback(async (newStats: CaughtPetsStats, userId?: string) => {
+    const idToUse = userId || profileId;
+    if (!idToUse) return;
     
     try {
       await supabase
@@ -56,14 +55,14 @@ export const useCaughtPetsStats = () => {
           caught_legendary: newStats.legendary,
           max_legendary_streak: newStats.maxLegendaryStreak,
         })
-        .eq('id', profile.id);
+        .eq('id', idToUse);
     } catch (error) {
       console.error('Error syncing caught pets stats:', error);
     }
-  }, [profile?.id]);
+  }, [profileId]);
 
   // Записать поимку питомца
-  const recordCatch = useCallback((rarity: 'common' | 'rare' | 'epic' | 'legendary') => {
+  const recordCatch = useCallback((rarity: 'common' | 'rare' | 'epic' | 'legendary', userId?: string) => {
     setStats(prev => {
       const newStats = { ...prev };
       
@@ -84,7 +83,7 @@ export const useCaughtPetsStats = () => {
       }
       
       // Синхронизируем с БД
-      syncToDatabase(newStats);
+      syncToDatabase(newStats, userId);
       
       return newStats;
     });
