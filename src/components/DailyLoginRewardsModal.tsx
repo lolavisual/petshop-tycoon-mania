@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Gift, Check, Sparkles } from 'lucide-react';
 import { useDailyLoginRewardsContext } from '@/contexts/DailyLoginRewardsContext';
 import { Button } from '@/components/ui/button';
+import { createPortal } from 'react-dom';
 
 interface DailyLoginRewardsModalProps {
   isOpen: boolean;
@@ -22,20 +23,29 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
   const currentDay = userProgress?.current_day || 1;
   const canClaim = canClaimToday();
 
-  return (
+  const portalTarget = typeof document !== 'undefined' ? document.body : null;
+
+  if (!portalTarget) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4 pointer-events-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           data-testid="daily-rewards-modal"
+          role="dialog"
+          aria-modal="true"
         >
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={onClose}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              onClose();
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -43,7 +53,7 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
 
           {/* Modal */}
           <motion.div
-            className="relative w-full max-w-md bg-gradient-to-b from-card to-card/95 rounded-3xl border border-primary/20 shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md bg-gradient-to-b from-card to-card/95 rounded-3xl border border-primary/20 shadow-2xl overflow-hidden pointer-events-auto"
             initial={{ scale: 0.8, opacity: 0, y: 50 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.8, opacity: 0, y: 50 }}
@@ -66,7 +76,8 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
               </p>
               
               <button
-                onClick={(e) => {
+                onPointerDown={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   onClose();
                 }}
@@ -187,6 +198,7 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    portalTarget
   );
 }
