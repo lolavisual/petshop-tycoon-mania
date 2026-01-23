@@ -1,7 +1,8 @@
-import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Trophy, X, Sparkles } from 'lucide-react';
 import Confetti from './Confetti';
+import { ModalPortal } from '@/components/ui/ModalPortal';
 
 interface Achievement {
   id: string;
@@ -34,35 +35,19 @@ const AchievementUnlockOverlay = ({ achievement, onClose }: AchievementUnlockOve
   }, [achievement, onClose]);
 
   return (
-    <AnimatePresence>
-      {achievement && (
-        <motion.div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-        >
-          {/* Backdrop */}
-          <motion.div
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          />
-
-          {/* Confetti */}
-          <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
-
-          {/* Content */}
-          <motion.div
-            className="relative z-10 w-full max-w-sm"
-            initial={{ scale: 0.5, y: 100, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.8, y: -50, opacity: 0 }}
-            transition={{ type: 'spring', damping: 15, stiffness: 200 }}
-            onClick={(e) => e.stopPropagation()}
-          >
+    <>
+      {/* Confetti renders separately outside the portal */}
+      <Confetti isActive={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
+      <ModalPortal
+        isOpen={!!achievement}
+        onClose={onClose}
+        zIndex={400}
+        testId="achievement-unlock-overlay"
+        backdropClassName="bg-black/80 backdrop-blur-md"
+      >
+        {achievement && (
+          <div className="relative w-full max-w-sm">
             {/* Glow effect */}
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-yellow-500/30 via-amber-500/30 to-yellow-500/30 rounded-3xl blur-2xl"
@@ -103,12 +88,14 @@ const AchievementUnlockOverlay = ({ achievement, onClose }: AchievementUnlockOve
 
               {/* Close button */}
               <button
-                onClick={(e) => {
+                onPointerDown={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   onClose();
                 }}
                 type="button"
                 className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-50 cursor-pointer"
+                data-testid="close-achievement-overlay"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -225,10 +212,10 @@ const AchievementUnlockOverlay = ({ achievement, onClose }: AchievementUnlockOve
                 Нажмите чтобы закрыть
               </motion.p>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </div>
+        )}
+      </ModalPortal>
+    </>
   );
 };
 
