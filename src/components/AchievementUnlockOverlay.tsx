@@ -45,6 +45,8 @@ const AchievementUnlockOverlay = ({ achievement, onClose }: AchievementUnlockOve
         zIndex={400}
         testId="achievement-unlock-overlay"
         backdropClassName="bg-black/80 backdrop-blur-md"
+        ariaLabel={achievement ? `Достижение разблокировано: ${achievement.name_ru}` : 'Достижение'}
+        ariaDescription={achievement?.description_ru || 'Вы получили новое достижение!'}
       >
         {achievement && (
           <div className="relative w-full max-w-sm">
