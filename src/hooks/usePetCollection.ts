@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { isValidUUID } from '@/lib/uuid';
 
 export interface PetType {
   id: string;
@@ -87,7 +88,8 @@ export const usePetCollection = (userId?: string) => {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!userId) {
+      // Skip API calls for demo mode or invalid UUIDs
+      if (!userId || !isValidUUID(userId)) {
         setLoading(false);
         return;
       }
@@ -204,7 +206,7 @@ export const usePetCollection = (userId?: string) => {
 
   // Рефреш данных
   const refresh = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !isValidUUID(userId)) return;
     
     const { data } = await supabase
       .from('user_pets')

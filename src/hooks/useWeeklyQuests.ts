@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { isValidUUID } from '@/lib/uuid';
 
 interface WeeklyQuest {
   id: string;
@@ -58,7 +59,8 @@ export const useWeeklyQuests = (userId?: string) => {
   const weekStart = getWeekStart();
 
   const loadQuests = useCallback(async () => {
-    if (!userId) {
+    // Skip API calls for demo mode or invalid UUIDs
+    if (!userId || !isValidUUID(userId)) {
       setLoading(false);
       return;
     }
@@ -137,7 +139,7 @@ export const useWeeklyQuests = (userId?: string) => {
   }, [userId, currentSeason, weekStart]);
 
   const claimReward = useCallback(async (userQuestId: string, quest: WeeklyQuest) => {
-    if (!userId) return;
+    if (!userId || !isValidUUID(userId)) return;
     setClaiming(userQuestId);
 
     try {
@@ -192,7 +194,7 @@ export const useWeeklyQuests = (userId?: string) => {
     requirementType: string,
     incrementBy: number = 1
   ) => {
-    if (!userId) return;
+    if (!userId || !isValidUUID(userId)) return;
 
     const allUserQuests = [...userWeeklyQuests, ...userSeasonalQuests];
     const matchingQuests = allUserQuests.filter(

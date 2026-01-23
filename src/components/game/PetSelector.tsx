@@ -6,6 +6,7 @@ import { X, Check, Loader2, Sparkles, Lock, ShoppingCart, Star, TrendingUp, Zap 
 import { Button } from '@/components/ui/button';
 import { hapticNotification, hapticImpact } from '@/lib/telegram';
 import { Progress } from '@/components/ui/progress';
+import { isValidUUID } from '@/lib/uuid';
 
 interface PetSelectorProps {
   currentPetType: string;
@@ -93,6 +94,12 @@ const PetSelector = ({
 
   useEffect(() => {
     const loadData = async () => {
+      // Skip API calls for demo mode or invalid UUIDs
+      if (!isValidUUID(userId)) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const [petTypesRes, ownedPetsRes] = await Promise.all([
           supabase.from('pet_types').select('*').order('price_crystals', { ascending: true }),
