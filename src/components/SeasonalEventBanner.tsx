@@ -28,6 +28,8 @@ export function SeasonalEventBanner({ isOpen, onClose }: SeasonalEventBannerProp
       onClose={onClose}
       zIndex={300}
       testId="seasonal-event-modal"
+      ariaLabel={activeEvent.name_ru}
+      ariaDescription={activeEvent.description_ru || 'Сезонное событие с особыми наградами'}
     >
       <div
         className="relative w-full max-w-md max-h-[85vh] overflow-hidden rounded-3xl border shadow-2xl"

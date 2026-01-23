@@ -40,6 +40,8 @@ export function PremiumModal({ isOpen, onClose }: PremiumModalProps) {
       onClose={onClose}
       zIndex={300}
       testId="premium-modal"
+      ariaLabel="VIP Premium подписка"
+      ariaDescription="Ускоренный прогресс и эксклюзивные бонусы для VIP участников"
     >
       <div
         className="relative w-full max-w-md max-h-[85vh] overflow-hidden rounded-3xl border border-amber-500/30 shadow-2xl"

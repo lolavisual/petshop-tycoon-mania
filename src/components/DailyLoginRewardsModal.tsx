@@ -29,6 +29,8 @@ export function DailyLoginRewardsModal({ isOpen, onClose }: DailyLoginRewardsMod
       onClose={onClose}
       zIndex={300}
       testId="daily-rewards-modal"
+      ariaLabel="Ежедневные награды"
+      ariaDescription="Заходи каждый день, чтобы получать бонусы и награды"
     >
       <div className="w-full max-w-md bg-gradient-to-b from-card to-card/95 rounded-3xl border border-primary/20 shadow-2xl overflow-hidden">
         {/* Header */}
